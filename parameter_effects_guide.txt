@@ -1,0 +1,248 @@
+BACTERIAL COLONY ANALYZER - PARAMETER EFFECTS GUIDE
+====================================================
+
+This guide explains how changing each parameter in the sidebar affects your final results,
+and shows the original values from the Colab notebook.
+
+IMAGE PROCESSING PARAMETERS
+==========================
+
+1. BILATERAL FILTER DIAMETER
+   Current Range: 3-21, Default: 9
+   Original Notebook Value: 9
+   Effect: Controls noise reduction while preserving edges
+   - Lower values (3-7): Less smoothing, more noise, sharper edges
+   - Higher values (15-21): More smoothing, less noise, softer edges
+   - Too high: May blur colony boundaries, making detection harder
+
+2. BILATERAL SIGMA COLOR
+   Current Range: 10-150, Default: 75
+   Original Notebook Value: 75
+   Effect: Controls color-based filtering in bilateral filter
+   - Lower values (10-50): Preserves color differences, less blur
+   - Higher values (100-150): More color averaging, smoother appearance
+   - Too high: May lose important color variations between colonies
+
+3. BILATERAL SIGMA SPACE
+   Current Range: 10-150, Default: 75
+   Original Notebook Value: 75
+   Effect: Controls spatial filtering in bilateral filter
+   - Lower values (10-50): Preserves spatial details, less blur
+   - Higher values (100-150): More spatial averaging, smoother appearance
+   - Too high: May blur colony shapes and boundaries
+
+4. CLAHE CLIP LIMIT
+   Current Range: 1.0-10.0, Default: 3.0
+   Original Notebook Value: 3.0
+   Effect: Controls contrast enhancement intensity
+   - Lower values (1.0-2.0): Subtle contrast enhancement
+   - Higher values (5.0-10.0): Strong contrast enhancement
+   - Too high: May create artifacts and over-enhance noise
+
+5. CLAHE TILE GRID SIZE
+   Current Range: 2-32, Default: 8
+   Original Notebook Value: 8
+   Effect: Controls local contrast enhancement area
+   - Lower values (2-4): Very local contrast enhancement
+   - Higher values (16-32): More global contrast enhancement
+   - Too small: May create blocky artifacts
+   - Too large: May lose local detail enhancement
+
+6. GAMMA CORRECTION
+   Current Range: 0.5-2.5, Default: 1.2
+   Original Notebook Value: 1.2
+   Effect: Controls overall brightness adjustment
+   - Values < 1.0: Brightens image (0.5 = much brighter)
+   - Values = 1.0: No change
+   - Values > 1.0: Darkens image (2.5 = much darker)
+   - Too extreme: May lose detail in bright/dark areas
+
+7. SHARPEN STRENGTH
+   Current Range: 0.0-2.0, Default: 1.0
+   Original Notebook Value: 1.0
+   Effect: Controls edge sharpening intensity
+   - 0.0: No sharpening
+   - 1.0: Normal sharpening
+   - 2.0: Strong sharpening
+   - Too high: May amplify noise and create artifacts
+
+COLONY DETECTION PARAMETERS
+==========================
+
+8. PLATE MARGIN PERCENT
+   Current Range: 0.05-0.20, Default: 0.08
+   Original Notebook Value: 0.08 (8%)
+   Effect: Controls how much of image edge to exclude from analysis
+   - Lower values (0.05): Includes more of image, may include plate edges
+   - Higher values (0.20): Excludes more, focuses on center
+   - Too low: May include non-plate areas
+   - Too high: May exclude valid colonies near edges
+
+9. MIN COLONY SIZE
+   Current Range: 10-50, Default: 15
+   Original Notebook Value: 15
+   Effect: Minimum area (pixels) for a colony to be considered valid
+   - Lower values (10): Detects very small colonies, may include noise
+   - Higher values (50): Only detects larger colonies, may miss small ones
+   - Too low: May include dust, noise, or artifacts
+   - Too high: May miss legitimate small colonies
+
+10. MAX COLONY SIZE
+    Current Range: 5000-20000, Default: 10000
+    Original Notebook Value: 10000
+    Effect: Maximum area (pixels) for a colony to be considered valid
+    - Lower values (5000): Excludes very large colonies
+    - Higher values (20000): Includes very large colonies
+    - Too low: May exclude legitimate large colonies
+    - Too high: May include merged colonies or artifacts
+
+11. ADAPTIVE THRESHOLD BLOCK SIZE
+    Current Range: 11-25, Default: 15
+    Original Notebook Value: 15
+    Effect: Block size for adaptive thresholding (must be odd)
+    - Lower values (11): More local thresholding, better for uneven lighting
+    - Higher values (25): More global thresholding
+    - Too small: May create noise in thresholding
+    - Too large: May miss local variations
+
+12. ADAPTIVE THRESHOLD C
+    Current Range: 1-10, Default: 3
+    Original Notebook Value: 3
+    Effect: Constant subtracted from mean for thresholding
+    - Lower values (1): More sensitive thresholding, detects more colonies
+    - Higher values (10): Less sensitive, detects fewer colonies
+    - Too low: May include too much noise
+    - Too high: May miss legitimate colonies
+
+13. WATERSHED MIN DISTANCE
+    Current Range: 5-15, Default: 8
+    Original Notebook Value: 8
+    Effect: Minimum distance between colony centers for watershed separation
+    - Lower values (5): Separates colonies that are closer together
+    - Higher values (15): Only separates colonies that are far apart
+    - Too low: May over-segment single colonies
+    - Too high: May not separate touching colonies
+
+14. WATERSHED THRESHOLD
+    Current Range: 0.1-0.5, Default: 0.3
+    Original Notebook Value: 0.3
+    Effect: Threshold for watershed peak detection
+    - Lower values (0.1): More sensitive peak detection
+    - Higher values (0.5): Less sensitive peak detection
+    - Too low: May detect false peaks
+    - Too high: May miss legitimate colony centers
+
+COLOR ANALYSIS PARAMETERS
+========================
+
+15. NUMBER OF COLOR CLUSTERS
+    Current Range: 0-10, Default: 0 (auto)
+    Original Notebook Value: Auto-detected
+    Effect: Number of color groups to create
+    - 0: Automatic detection (recommended)
+    - 1-3: Few color groups, broad categorization
+    - 4-7: Medium color groups, moderate detail
+    - 8-10: Many color groups, fine detail
+    - Too few: May group very different colonies together
+    - Too many: May over-segment similar colonies
+
+16. KMEANS RANDOM STATE
+    Current Range: 0-100, Default: 42
+    Original Notebook Value: 42
+    Effect: Random seed for consistent color clustering
+    - Same value = same results every time
+    - Different values = different clustering results
+    - 42: Standard default for reproducibility
+
+17. KMEANS N_INIT
+    Current Range: 1-20, Default: 10
+    Original Notebook Value: 10
+    Effect: Number of times to run K-means with different seeds
+    - Lower values (1-5): Faster but less optimal clustering
+    - Higher values (15-20): Slower but more optimal clustering
+    - Too low: May get suboptimal color groups
+    - Too high: Slower processing without much benefit
+
+TOP COLONIES & SCORING PARAMETERS
+================================
+
+18. NUMBER OF TOP COLONIES TO DISPLAY
+    Current Range: 1-50, Default: 20
+    Original Notebook Value: 20
+    Effect: How many highest-scoring colonies to show
+    - Lower values (1-10): Shows only the most interesting colonies
+    - Higher values (30-50): Shows more colonies, including less interesting ones
+    - Affects both the "Top Colonies" tab and "Binary Mask & Grid" tab
+
+19. PENALTY FACTOR FOR DIVERSITY
+    Current Range: 0.0-1.0, Default: 0.5
+    Original Notebook Value: 0.5
+    Effect: Reduces score for similar colonies (higher = more diverse selection)
+    - 0.0: No diversity penalty, pure score-based selection
+    - 0.5: Moderate diversity penalty
+    - 1.0: Strong diversity penalty, ensures variety
+    - Higher values: More diverse colony types in top selection
+
+TYPICAL EFFECTS OF PARAMETER CHANGES
+===================================
+
+LOW DETECTION ISSUES:
+- Decrease Min Colony Size (10-15)
+- Decrease Adaptive Threshold C (1-3)
+- Increase CLAHE Clip Limit (5.0-8.0)
+- Decrease Plate Margin Percent (0.05-0.08)
+
+TOO MANY FALSE POSITIVES:
+- Increase Min Colony Size (20-30)
+- Increase Adaptive Threshold C (5-8)
+- Decrease CLAHE Clip Limit (1.0-2.0)
+- Increase Watershed Min Distance (10-15)
+
+POOR COLONY SEPARATION:
+- Decrease Watershed Min Distance (5-8)
+- Decrease Watershed Threshold (0.1-0.2)
+- Increase Adaptive Threshold Block Size (19-25)
+
+OVER-SEGMENTATION:
+- Increase Watershed Min Distance (12-15)
+- Increase Watershed Threshold (0.4-0.5)
+- Decrease Adaptive Threshold Block Size (11-15)
+
+POOR IMAGE QUALITY:
+- Increase Bilateral Filter Diameter (15-21)
+- Increase Bilateral Sigma Color/Space (100-150)
+- Decrease Sharpen Strength (0.0-0.5)
+- Adjust Gamma Correction (0.8-1.5)
+
+ORIGINAL NOTEBOOK VALUES SUMMARY:
+================================
+Image Processing:
+- Bilateral Filter: d=9, sigmaColor=75, sigmaSpace=75
+- CLAHE: clipLimit=3.0, tileGridSize=(8,8)
+- Gamma: 1.2
+- Sharpen: kernel=[[-1,-1,-1], [-1,9,-1], [-1,-1,-1]]
+
+Colony Detection:
+- Plate Margin: 8%
+- Min Colony Size: 15
+- Max Colony Size: 10000
+- Adaptive Threshold: blockSize=15, C=3
+- Watershed: minDistance=8, threshold=0.3
+
+Color Analysis:
+- Auto-detect clusters
+- Random State: 42
+- n_init: 10
+
+Top Colonies:
+- Display: 20 colonies
+- Penalty Factor: 0.5
+
+RECOMMENDATIONS:
+===============
+1. Start with default values for most parameters
+2. Adjust Min/Max Colony Size based on your image scale
+3. Use Plate Margin Percent to exclude non-plate areas
+4. Adjust CLAHE Clip Limit for better contrast if needed
+5. Use Watershed parameters to improve colony separation
+6. Keep Color Analysis on auto-detect unless you need specific grouping 
