@@ -533,6 +533,7 @@ def display_binary_mask(results):
     st.header(" Final Binary Mask (Colonies)")
     if 'final_binary_mask' in results and results['final_binary_mask'] is not None:
         st.image(results['final_binary_mask'], caption="Final binary mask (colonies=white)")
+        
         # Optionally overlay a grid
         import cv2
         import numpy as np
@@ -545,6 +546,51 @@ def display_binary_mask(results):
         for y in range(0, h, grid_spacing):
             cv2.line(grid_img, (0, y), (w, y), (200, 200, 200), 1)
         st.image(grid_img, caption="Binary mask with grid overlay")
+        
+        # Show zoomed views of top colonies on binary mask
+        if 'top_colonies' in results and not results['top_colonies'].empty:
+            st.subheader(" Zoomed Views of Top Colonies")
+            
+            top_colonies = results['top_colonies'].head(5)  # Show top 5
+            zoom_size = 100  # pixels around colony
+            
+            # Create columns for zoomed views
+            cols = st.columns(5)
+            
+            for idx, (col_idx, row) in enumerate(zip(cols, top_colonies.iterrows())):
+                colony_id = row[1]['colony_id']
+                rank = idx + 1
+                
+                prop = results['colony_properties'][colony_id]
+                y_center, x_center = prop.centroid
+                
+                # Calculate zoom boundaries
+                y_min = max(0, int(y_center - zoom_size))
+                y_max = min(mask.shape[0], int(y_center + zoom_size))
+                x_min = max(0, int(x_center - zoom_size))
+                x_max = min(mask.shape[1], int(x_center + zoom_size))
+                
+                # Extract zoomed region
+                crop = mask[y_min:y_max, x_min:x_max].copy()
+                crop_bgr = cv2.cvtColor(crop, cv2.COLOR_GRAY2BGR)
+                
+                # Draw grid on zoomed view
+                h_crop, w_crop = crop_bgr.shape[:2]
+                for gx in range(0, w_crop, 20):
+                    cv2.line(crop_bgr, (gx, 0), (gx, h_crop), (200, 200, 200), 1)
+                for gy in range(0, h_crop, 20):
+                    cv2.line(crop_bgr, (0, gy), (w_crop, gy), (200, 200, 200), 1)
+                
+                # Draw colony outline
+                colony_mask_crop = (results['colony_labels'][y_min:y_max, x_min:x_max] == prop.label).astype(np.uint8)
+                contours, _ = cv2.findContours(colony_mask_crop, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if contours:
+                    cv2.drawContours(crop_bgr, contours, -1, (0, 255, 0), 2)
+                
+                # Display in column
+                with col_idx:
+                    st.image(crop_bgr, caption=f"Rank {rank}")
+                    st.caption(f"Score: {row[1]['bio_interest']:.2f}")
     else:
         st.warning("No binary mask available.")
 
