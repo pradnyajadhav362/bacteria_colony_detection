@@ -174,6 +174,17 @@ def main():
                     for key, value in params.items():
                         st.write(f"- {key}: {value}")
                     
+                    # Debug: Print library versions
+                    st.write("**Debug: Library versions:**")
+                    import cv2
+                    import numpy as np
+                    import scipy
+                    import sklearn
+                    st.write(f"- OpenCV: {cv2.__version__}")
+                    st.write(f"- NumPy: {np.__version__}")
+                    st.write(f"- SciPy: {scipy.__version__}")
+                    st.write(f"- Scikit-learn: {sklearn.__version__}")
+                    
                     analyzer = ColonyAnalyzer(**params)
                     results = analyzer.run_full_analysis("temp_image.jpg")
                     # add binary mask to results
