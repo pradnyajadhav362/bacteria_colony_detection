@@ -39,43 +39,39 @@ def main():
         st.header("⚙️ Analysis Parameters")
         st.caption("Adjust image processing settings")
         
-        bilateral_d = st.slider("Bilateral filter diameter", 5, 15, 9,
-                               help="Diameter of pixel neighborhood for bilateral filtering")
-        bilateral_sigma_color = st.slider("Bilateral color sigma", 25, 150, 75,
-                                         help="Filter sigma in color space")
-        bilateral_sigma_space = st.slider("Bilateral space sigma", 25, 150, 75,
-                                         help="Filter sigma in coordinate space")
-        
-        clahe_clip_limit = st.slider("CLAHE clip limit", 1.0, 5.0, 3.0, 0.1,
-                                    help="Contrast limiting threshold")
-        clahe_tile_grid = st.slider("CLAHE tile grid size", 4, 16, 8,
-                                   help="Size of grid for histogram equalization")
-        
-        gamma = st.slider("Gamma correction", 0.5, 2.0, 1.2, 0.1,
-                         help="Gamma value for brightness adjustment")
-        sharpen_strength = st.slider("Sharpen strength", 0.0, 2.0, 1.0, 0.1,
-                                    help="Strength of image sharpening")
+        bilateral_d = st.slider("Bilateral filter diameter", 3, 21, 9, step=2, 
+                               help="Diameter of pixel neighborhood for noise reduction (higher = smoother)")
+        bilateral_sigma_color = st.slider("Bilateral sigmaColor", 10, 150, 75,
+                                         help="Color space sigma for noise filtering (higher = more blur)")
+        bilateral_sigma_space = st.slider("Bilateral sigmaSpace", 10, 150, 75,
+                                         help="Coordinate space sigma for noise filtering (higher = more blur)")
+        clahe_clip_limit = st.slider("CLAHE clip limit", 1.0, 10.0, 3.0,
+                                    help="Contrast enhancement limit (higher = more contrast)")
+        clahe_tile_grid = st.slider("CLAHE tile grid size", 2, 32, 8,
+                                   help="Grid size for contrast enhancement (smaller = more local)")
+        gamma = st.slider("Gamma correction", 0.5, 2.5, 1.2,
+                         help="Brightness adjustment (1.0 = normal, <1 = brighter, >1 = darker)")
+        sharpen_strength = st.slider("Sharpen strength", 0.0, 2.0, 1.0,
+                                    help="Edge sharpening intensity (0 = no sharpening)")
         
         st.header("🔍 Colony Detection")
         st.caption("Configure colony segmentation parameters")
         
-        margin_percent = st.slider("Plate margin (%)", 0.05, 0.20, 0.08, 0.01,
+        margin_percent = st.slider("Plate margin percent", 0.05, 0.20, 0.08, 0.01,
                                   help="Percentage of image edges to exclude from plate detection")
         
-        adaptive_block_size = st.slider("Adaptive threshold block size", 11, 25, 15, 2,
+        min_colony_size = st.slider("Min colony size", 10, 50, 15,
+                                   help="Minimum area in pixels for a colony to be considered valid")
+        max_colony_size = st.slider("Max colony size", 5000, 20000, 10000,
+                                   help="Maximum area in pixels for a colony to be considered valid")
+        adaptive_block_size = st.slider("Adaptive threshold block size", 11, 25, 15, step=2,
                                        help="Block size for adaptive thresholding (must be odd)")
         adaptive_c = st.slider("Adaptive threshold C", 1, 10, 3,
-                              help="Constant subtracted from mean for thresholding")
-        
-        min_colony_size = st.slider("Minimum colony size", 10, 50, 15,
-                                   help="Minimum area (pixels) for a valid colony")
-        max_colony_size = st.slider("Maximum colony size", 5000, 20000, 10000,
-                                   help="Maximum area (pixels) for a valid colony")
-        
-        min_distance = st.slider("Minimum distance between colonies", 5, 15, 8,
-                                help="Minimum distance for watershed separation")
-        watershed = st.checkbox("Use watershed separation", value=True,
-                               help="Use watershed algorithm to separate touching colonies")
+                              help="Constant subtracted from mean for adaptive thresholding")
+        watershed_min_distance = st.slider("Watershed min distance", 5, 15, 8,
+                                          help="Minimum distance between colony centers for watershed")
+        watershed_threshold = st.slider("Watershed threshold", 0.1, 0.5, 0.3, 0.05,
+                                       help="Threshold for watershed peak detection")
         
         st.header("🎨 Color Analysis")
         st.caption("Configure color clustering parameters")
@@ -119,8 +115,8 @@ def main():
                     adaptive_c=adaptive_c,
                     min_colony_size=min_colony_size,
                     max_colony_size=max_colony_size,
-                    min_distance=min_distance,
-                    watershed=watershed,
+                    watershed_min_distance=watershed_min_distance,
+                    watershed_threshold=watershed_threshold,
                     color_n_clusters=(color_n_clusters if color_n_clusters > 0 else None),
                     color_random_state=color_random_state,
                     color_n_init=color_n_init,
