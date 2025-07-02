@@ -9,13 +9,10 @@ from typing import List, Optional
 
 class EmailAuth:
     def __init__(self, allowed_emails: List[str], secret_key: str = "your-secret-key"):
-        # 
-        Initialize email-based authentication
-        
-        Args:
-            allowed_emails: List of email addresses that are allowed to access the app
-            secret_key: Secret key for session management
-        
+        # Initialize email-based authentication
+        # Args:
+        #     allowed_emails: List of email addresses that are allowed to access the app
+        #     secret_key: Secret key for session management
         self.allowed_emails = [email.lower().strip() for email in allowed_emails]
         self.secret_key = secret_key
         
@@ -27,12 +24,12 @@ class EmailAuth:
     
     def login_page(self) -> bool:
         # Display login page and return True if authentication successful
-        st.markdown(# 
-        #  Bacterial Colony Analyzer - Authentication Required
+        st.markdown("""
+        # Bacterial Colony Analyzer - Authentication Required
         
         This application requires authentication to access.
         Please enter your email address to continue.
-        )
+        """)
         
         with st.form("login_form"):
             email = st.text_input("Email Address", placeholder="Enter your email address")
@@ -75,13 +72,12 @@ class EmailAuth:
                 st.rerun()
 
 def get_allowed_emails() -> List[str]:
-    # 
-    Get list of allowed email addresses
-    You can modify this function to:
-    1. Read from a file
-    2. Connect to a database
-    3. Use environment variables
-    4. Or hardcode the list
+    # Get list of allowed email addresses
+    # You can modify this function to:
+    # 1. Read from a file
+    # 2. Connect to a database
+    # 3. Use environment variables
+    # 4. Or hardcode the list
     
     # Option 1: Read from file (recommended)
     try:
