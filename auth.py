@@ -10,6 +10,7 @@ def get_allowed_emails() -> List[str]:
     # Priority 1: Streamlit secrets (recommended for deployment)
     # Priority 2: Environment variable (fallback)
     # Priority 3: Local file (for local development)
+    # Priority 4: Simple fallback for testing
     
     # Option 1: Read from Streamlit secrets (recommended)
     try:
@@ -17,8 +18,8 @@ def get_allowed_emails() -> List[str]:
             allowed_emails = st.secrets.get("auth", {}).get("allowed_emails", [])
             if allowed_emails:
                 return allowed_emails
-    except Exception:
-        pass
+    except Exception as e:
+        st.write(f"Debug: Could not read from secrets: {e}")
     
     # Option 2: Read from environment variable (fallback)
     emails_str = os.getenv("ALLOWED_EMAILS", "")
@@ -40,8 +41,8 @@ def get_allowed_emails() -> List[str]:
     except FileNotFoundError:
         pass
     
-    # No hardcoded fallback - user must set up secrets or environment variable
-    return []
+    # Option 4: Simple fallback for testing (remove this in production)
+    return ["prjadhav@andrew.cmu.edu"]
 
 def authenticate():
     # Simple authentication function using Streamlit secrets
@@ -53,10 +54,15 @@ def authenticate():
         st.write("This application requires authentication to access.")
         st.write("Please enter your email address to continue.")
         
+        # Debug information
+        allowed_emails = get_allowed_emails()
+        st.write(f"Debug: Found {len(allowed_emails)} allowed emails")
+        if allowed_emails:
+            st.write(f"Debug: Allowed emails: {allowed_emails}")
+        
         email = st.text_input("Enter your email:")
         
         if st.button("Login"):
-            allowed_emails = get_allowed_emails()
             if not allowed_emails:
                 st.error("No allowed emails configured. Please set up authentication.")
                 st.stop()
