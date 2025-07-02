@@ -88,8 +88,8 @@ def main():
         st.header(" Top Colonies & Scoring")
         st.caption("Select and rank the most interesting colonies")
         
-        n_top_colonies = st.slider("Number of top colonies to analyze", 5, 50, 20,
-                                  help="How many highest-scoring colonies to select during analysis")
+        n_top_colonies = st.slider("Number of top colonies to display", 1, 50, 20,
+                                  help="How many highest-scoring colonies to show")
         penalty_factor = st.slider("Penalty factor for diversity", 0.0, 1.0, 0.5,
                                   help="Reduce score for similar colonies (higher = more diverse selection)")
         
@@ -102,11 +102,8 @@ def main():
                                         help="Extract and cluster colony colors")
         run_density_analysis = st.checkbox("Analyze density", value=True,
                                           help="Measure colony opacity and texture")
-        if st.button(" Run Analysis", type="primary"):
-            if uploaded_file is not None:
-                st.session_state.run_analysis = True
-                st.session_state.uploaded_file = uploaded_file
-                st.session_state.params = dict(
+        # Store current parameters in session state
+        current_params = dict(
                     bilateral_d=bilateral_d,
                     bilateral_sigma_color=bilateral_sigma_color,
                     bilateral_sigma_space=bilateral_sigma_space,
@@ -127,6 +124,12 @@ def main():
                     n_top_colonies=n_top_colonies,
                     penalty_factor=penalty_factor
                 )
+        
+        if st.button(" Run Analysis", type="primary"):
+            if uploaded_file is not None:
+                st.session_state.run_analysis = True
+                st.session_state.uploaded_file = uploaded_file
+                st.session_state.params = current_params
             else:
                 st.error("Please upload an image first!")
     
@@ -134,23 +137,38 @@ def main():
     if 'run_analysis' in st.session_state and st.session_state.run_analysis:
         if 'uploaded_file' in st.session_state:
             uploaded_file = st.session_state.uploaded_file
-            params = st.session_state.get('params', {})
+            stored_params = st.session_state.get('params', {})
             
-            # Get current slider values for display (these can change without re-running analysis)
-            current_n_top_colonies = st.slider("Number of top colonies to display", 1, 50, 20,
-                                              help="How many highest-scoring colonies to show (can be changed without re-running analysis)")
+            # Get current slider value from sidebar (reactive)
+            current_n_top_colonies = st.sidebar.slider("Number of top colonies to display", 1, 50, 20,
+                                                      help="How many highest-scoring colonies to show")
+            
+            # Check if parameters have changed (specifically n_top_colonies)
+            params_changed = (stored_params.get('n_top_colonies', 20) != current_n_top_colonies)
+            
+            # Update stored params with current slider value
+            params = stored_params.copy()
+            params['n_top_colonies'] = current_n_top_colonies
             
             # save uploaded file temporarily
             with open("temp_image.jpg", "wb") as f:
                 f.write(uploaded_file.getbuffer())
             
-            # run analysis
-            with st.spinner(" Analyzing bacterial colonies..."):
-                analyzer = ColonyAnalyzer(**params)
-                results = analyzer.run_full_analysis("temp_image.jpg")
-                # add binary mask to results
-                if hasattr(analyzer, 'final_binary_mask'):
-                    results['final_binary_mask'] = analyzer.final_binary_mask
+            # Check if we need to re-run analysis or use cached results
+            if params_changed or 'analysis_results' not in st.session_state:
+                # run analysis
+                with st.spinner(" Analyzing bacterial colonies..."):
+                    analyzer = ColonyAnalyzer(**params)
+                    results = analyzer.run_full_analysis("temp_image.jpg")
+                    # add binary mask to results
+                    if hasattr(analyzer, 'final_binary_mask'):
+                        results['final_binary_mask'] = analyzer.final_binary_mask
+                    # Cache the results
+                    st.session_state.analysis_results = results
+                    st.session_state.params = params
+            else:
+                # Use cached results
+                results = st.session_state.analysis_results
             
             if results is not None:
                 display_results(results, current_n_top_colonies)
