@@ -17,7 +17,7 @@ from auth import init_auth
 
 st.set_page_config(
     page_title="Bacterial Colony Analyzer",
-    page_icon="🔬",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -26,18 +26,18 @@ def main():
     # Initialize authentication
     auth = init_auth()
     
-    st.title("🔬 Bacterial Colony Analysis Pipeline")
+    st.title(" Bacterial Colony Analysis Pipeline")
     st.markdown("---")
     
     # sidebar for file upload and parameters
     with st.sidebar:
-        st.header("📁 Upload Image")
+        st.header(" Upload Image")
         uploaded_file = st.file_uploader(
             "Choose a petri dish image",
             type=['png', 'jpg', 'jpeg'],
             help="Upload a high-resolution image of a petri dish with bacterial colonies"
         )
-        st.header("⚙️ Preprocessing Parameters")
+        st.header(" Preprocessing Parameters")
         bilateral_d = st.slider("Bilateral filter diameter", 3, 21, 9, step=2)
         bilateral_sigma_color = st.slider("Bilateral sigmaColor", 10, 150, 75)
         bilateral_sigma_space = st.slider("Bilateral sigmaSpace", 10, 150, 75)
@@ -45,27 +45,27 @@ def main():
         clahe_tile_grid = st.slider("CLAHE tile grid size", 2, 32, 8)
         gamma = st.slider("Gamma correction", 0.5, 2.5, 1.2)
         sharpen_strength = st.slider("Sharpen strength", 0.0, 2.0, 1.0)
-        st.header("🧫 Plate Detection")
+        st.header(" Plate Detection")
         margin_percent = st.slider("Plate edge margin (%)", 1, 20, 8) / 100.0
-        st.header("🔬 Segmentation")
+        st.header(" Segmentation")
         adaptive_block_size = st.slider("Adaptive threshold block size (odd)", 11, 51, 15, step=2)
         adaptive_c = st.slider("Adaptive threshold C", 1, 10, 3)
         min_colony_size = st.slider("Min colony size (pixels)", 5, 200, 15)
         max_colony_size = st.slider("Max colony size (pixels)", 500, 20000, 10000)
         min_distance = st.slider("Min distance for peak_local_max", 3, 20, 8)
         watershed = st.checkbox("Use watershed for splitting colonies", value=True)
-        st.header("🎨 Color Clustering")
+        st.header(" Color Clustering")
         color_n_clusters = st.number_input("Number of color clusters (0=auto)", 0, 10, 0)
         color_random_state = st.number_input("KMeans random state", 0, 100, 42)
         color_n_init = st.slider("KMeans n_init", 1, 20, 10)
-        st.header("🏆 Top Colonies & Scoring")
+        st.header(" Top Colonies & Scoring")
         n_top_colonies = st.slider("Number of top colonies to display", 5, 50, 20)
         penalty_factor = st.slider("Penalty factor for diversity", 0.0, 1.0, 0.5)
-        st.header("🎯 Analysis Options")
+        st.header(" Analysis Options")
         run_morphology = st.checkbox("Analyze morphology", value=True)
         run_color_analysis = st.checkbox("Analyze colors", value=True)
         run_density_analysis = st.checkbox("Analyze density", value=True)
-        if st.button("🚀 Run Analysis", type="primary"):
+        if st.button(" Run Analysis", type="primary"):
             if uploaded_file is not None:
                 st.session_state.run_analysis = True
                 st.session_state.uploaded_file = uploaded_file
@@ -104,7 +104,7 @@ def main():
                 f.write(uploaded_file.getbuffer())
             
             # run analysis
-            with st.spinner("🔬 Analyzing bacterial colonies..."):
+            with st.spinner(" Analyzing bacterial colonies..."):
                 analyzer = ColonyAnalyzer(**params)
                 results = analyzer.run_full_analysis("temp_image.jpg")
                 # add binary mask to results
@@ -114,7 +114,7 @@ def main():
             if results is not None:
                 display_results(results, params.get('n_top_colonies', 20))
             else:
-                st.error("❌ Analysis failed. Please check your image and try again.")
+                st.error(" Analysis failed. Please check your image and try again.")
             
             # cleanup
             import os
@@ -124,7 +124,7 @@ def main():
     else:
         # welcome screen
         st.markdown("""
-        ## Welcome to the Bacterial Colony Analyzer! 🧫
+        ## Welcome to the Bacterial Colony Analyzer! 
         
         This app analyzes petri dish images to detect, characterize, and score bacterial colonies.
         
@@ -148,7 +148,7 @@ def main():
         """)
         
         # example image
-        st.subheader("📸 Example Analysis")
+        st.subheader(" Example Analysis")
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -164,15 +164,15 @@ def main():
             st.image("https://via.placeholder.com/300x200/FF9800/FFFFFF?text=Results", use_column_width=True)
 
 def display_results(results, n_top_colonies):
-    """display analysis results in organized tabs"""
+    # display analysis results in organized tabs
     
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "📊 Overview", 
-        "🔍 Colony Details", 
-        "🎨 Color Analysis", 
-        "📈 Morphology", 
-        "🔬 Top Colonies",
-        "🟦 Binary Mask & Grid"
+        " Overview", 
+        " Colony Details", 
+        " Color Analysis", 
+        " Morphology", 
+        " Top Colonies",
+        " Binary Mask & Grid"
     ])
     
     with tab1:
@@ -194,8 +194,8 @@ def display_results(results, n_top_colonies):
         display_binary_mask(results)
 
 def display_overview(results):
-    """display overview statistics and key metrics"""
-    st.header("📊 Analysis Overview")
+    # display overview statistics and key metrics
+    st.header(" Analysis Overview")
     
     # key metrics
     col1, col2, col3, col4 = st.columns(4)
@@ -222,7 +222,7 @@ def display_overview(results):
             st.metric("Circular Colonies", "N/A")
     
     # image comparison
-    st.subheader("🖼️ Image Processing Results")
+    st.subheader(" Image Processing Results")
     col1, col2 = st.columns(2)
     
     with col1:
@@ -234,7 +234,7 @@ def display_overview(results):
         st.image(results['processed_image'], use_column_width=True)
     
     # colony detection visualization
-    st.subheader("🔍 Colony Detection")
+    st.subheader(" Colony Detection")
     
     # create visualization of detected colonies
     colony_viz = results['processed_image'].copy()
@@ -246,8 +246,8 @@ def display_overview(results):
     st.image(colony_viz, use_column_width=True, caption="Detected colonies highlighted in green")
 
 def display_colony_details(results):
-    """display detailed colony information in tables"""
-    st.header("🔍 Colony Details")
+    # display detailed colony information in tables
+    st.header(" Colony Details")
     
     if 'combined_df' in results and not results['combined_df'].empty:
         df = results['combined_df']
@@ -300,7 +300,7 @@ def display_colony_details(results):
         # download button
         csv = filtered_df.to_csv(index=False)
         st.download_button(
-            label="📥 Download CSV",
+            label=" Download CSV",
             data=csv,
             file_name="colony_analysis_results.csv",
             mime="text/csv"
@@ -310,8 +310,8 @@ def display_colony_details(results):
         st.warning("No colony data available")
 
 def display_color_analysis(results):
-    """display color clustering results"""
-    st.header("🎨 Color Analysis")
+    # display color clustering results
+    st.header(" Color Analysis")
     
     if 'colony_data' in results and results['colony_data']:
         colony_data = results['colony_data']
@@ -332,7 +332,7 @@ def display_color_analysis(results):
             st.plotly_chart(fig, use_container_width=True)
         
         # color visualization
-        st.subheader("🎨 Colony Colors by Cluster")
+        st.subheader(" Colony Colors by Cluster")
         
         # create color visualization
         if 'colony_labels' in results and 'processed_image' in results:
@@ -358,8 +358,8 @@ def display_color_analysis(results):
         st.warning("No color analysis data available")
 
 def display_morphology_analysis(results):
-    """display morphology analysis results"""
-    st.header("📈 Morphology Analysis")
+    # display morphology analysis results
+    st.header(" Morphology Analysis")
     
     if 'morph_df' in results and not results['morph_df'].empty:
         df = results['morph_df']
@@ -387,7 +387,7 @@ def display_morphology_analysis(results):
             st.plotly_chart(fig, use_container_width=True)
         
         # morphology scatter plots
-        st.subheader("📊 Morphology Relationships")
+        st.subheader(" Morphology Relationships")
         
         col1, col2 = st.columns(2)
         
@@ -414,7 +414,7 @@ def display_morphology_analysis(results):
             st.plotly_chart(fig, use_container_width=True)
         
         # morphology statistics
-        st.subheader("📋 Morphology Statistics")
+        st.subheader(" Morphology Statistics")
         morph_stats = df[['area', 'circularity', 'aspect_ratio', 'solidity']].describe()
         st.dataframe(morph_stats, use_container_width=True)
     
@@ -422,14 +422,14 @@ def display_morphology_analysis(results):
         st.warning("No morphology data available")
 
 def display_top_colonies(results, n_top_colonies):
-    """display top-scoring colonies with visualizations"""
-    st.header(f"🔬 Top {n_top_colonies} Colonies")
+    # display top-scoring colonies with visualizations
+    st.header(f" Top {n_top_colonies} Colonies")
     
     if 'top_colonies' in results and not results['top_colonies'].empty:
         top_df = results['top_colonies'].head(n_top_colonies)
         
         # top colonies table
-        st.subheader("🏆 Top Colonies by Interest Score")
+        st.subheader(" Top Colonies by Interest Score")
         st.dataframe(
             top_df[['colony_id', 'bio_interest', 'form', 'density_class', 'area']].round(3),
             use_container_width=True,
@@ -461,7 +461,7 @@ def display_top_colonies(results, n_top_colonies):
             st.plotly_chart(fig, use_container_width=True)
         
         # visualize top colonies on image
-        st.subheader("🎯 Top Colonies Visualization")
+        st.subheader(" Top Colonies Visualization")
         
         if 'processed_image' in results and 'colony_properties' in results:
             marked_image = results['processed_image'].copy()
@@ -493,7 +493,7 @@ def display_top_colonies(results, n_top_colonies):
         st.warning("No top colonies data available")
 
 def display_binary_mask(results):
-    st.header("🟦 Final Binary Mask (Colonies)")
+    st.header(" Final Binary Mask (Colonies)")
     if 'final_binary_mask' in results and results['final_binary_mask'] is not None:
         st.image(results['final_binary_mask'], caption="Final binary mask (colonies=white)", use_column_width=True)
         # Optionally overlay a grid

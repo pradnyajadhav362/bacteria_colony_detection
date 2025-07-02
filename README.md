@@ -1,8 +1,8 @@
-# 🔬 Bacterial Colony Analysis Pipeline
+#  Bacterial Colony Analysis Pipeline
 
 A comprehensive image analysis pipeline for detecting, characterizing, and scoring bacterial colonies from petri dish images. This project includes both a modular Python class for analysis and a Streamlit web application with authentication.
 
-## 🚀 Features
+##  Features
 
 ### Analysis Pipeline
 - **Image Preprocessing**: Noise reduction, contrast enhancement, gamma correction
@@ -20,7 +20,7 @@ A comprehensive image analysis pipeline for detecting, characterizing, and scori
 - **Authentication**: Email-based access control
 - **Cloud Deployment**: Ready for Streamlit Cloud
 
-## 🔐 Authentication
+##  Authentication
 
 The app includes email-based authentication to control access:
 
@@ -39,7 +39,7 @@ researcher@lab.org
 - Logout functionality
 - Access control for authorized users only
 
-## 📦 Installation
+##  Installation
 
 ### Local Development
 ```bash
@@ -64,7 +64,7 @@ streamlit run app.py
 - plotly
 - streamlit
 
-## 🚀 Deployment
+##  Deployment
 
 ### Streamlit Cloud Deployment
 1. Push your code to GitHub
@@ -75,7 +75,7 @@ streamlit run app.py
 
 See `deploy_guide.md` for detailed deployment instructions.
 
-## 📊 Usage
+##  Usage
 
 ### Web Application
 1. **Login**: Enter your authorized email address
@@ -99,24 +99,24 @@ print(f"Found {len(results['colony_properties'])} colonies")
 print(f"Top colony score: {results['top_colonies']['bio_interest'].max()}")
 ```
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 bacterial-colony-analyzer/
-├── app.py                 # Main Streamlit application
-├── auth.py               # Authentication module
-├── colony_analyzer.py    # Core analysis pipeline
-├── requirements.txt      # Python dependencies
-├── allowed_emails.txt   # Authorized email addresses
-├── .streamlit/
-│   └── config.toml      # Streamlit configuration
-├── deploy_guide.md      # Deployment instructions
-├── test_colony_analyzer.py  # Test suite
-├── demo_data_generator.py   # Sample data generator
-└── README.md            # This file
+ app.py                 # Main Streamlit application
+ auth.py               # Authentication module
+ colony_analyzer.py    # Core analysis pipeline
+ requirements.txt      # Python dependencies
+ allowed_emails.txt   # Authorized email addresses
+ .streamlit/
+    config.toml      # Streamlit configuration
+ deploy_guide.md      # Deployment instructions
+ test_colony_analyzer.py  # Test suite
+ demo_data_generator.py   # Sample data generator
+ README.md            # This file
 ```
 
-## 🔧 Configuration
+##  Configuration
 
 ### Analysis Parameters
 - **Preprocessing**: Bilateral filtering, CLAHE, gamma correction
@@ -129,7 +129,7 @@ bacterial-colony-analyzer/
 - **Environment Variables**: Set `ALLOWED_EMAILS`
 - **Hardcoded**: Modify `auth.py` directly
 
-## 📈 Results
+##  Results
 
 The analysis provides:
 - **Colony Count**: Total number of detected colonies
@@ -159,18 +159,18 @@ python demo_data_generator.py
 4. Add tests if applicable
 5. Submit a pull request
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+##  Support
 
 For issues and questions:
 1. Check the troubleshooting section in `deploy_guide.md`
 2. Review the test suite for usage examples
 3. Open an issue on GitHub
 
-## 🔬 Scientific Applications
+##  Scientific Applications
 
 This pipeline is designed for:
 - Microbiology research

@@ -70,7 +70,7 @@ class ColonyAnalyzer:
         self.final_binary_mask = None
         
     def load_image(self, image_path):
-        """load and convert image to rgb format"""
+        # load and convert image to rgb format
         print("loading microbiome plate image")
         
         original_image = cv2.imread(image_path)
@@ -87,7 +87,7 @@ class ColonyAnalyzer:
         return original_image
     
     def preprocess_image(self, original_image):
-        """denoise, enhance contrast, apply gamma correction, and sharpen"""
+        # denoise, enhance contrast, apply gamma correction, and sharpen
         print("cleaning and enhancing image quality")
         
         img = original_image.copy()
@@ -117,7 +117,7 @@ class ColonyAnalyzer:
         return img_sharpened
     
     def detect_plate(self, processed_image):
-        """find inner rectangular region of plate and compute metrics"""
+        # find inner rectangular region of plate and compute metrics
         print("detecting inner plate area without edges")
         
         gray = cv2.cvtColor(processed_image, cv2.COLOR_RGB2GRAY)
@@ -167,7 +167,7 @@ class ColonyAnalyzer:
         return final_mask, plate_info
     
     def segment_colonies(self, processed_image, plate_mask):
-        """identify each bacterial colony as separate blob within dish boundary"""
+        # identify each bacterial colony as separate blob within dish boundary
         print("segmenting colonies in rectangular plate")
         
         # apply rectangular plate mask first
@@ -222,7 +222,7 @@ class ColonyAnalyzer:
         return valid_label_mask, valid_colonies
     
     def analyze_morphology(self, colony_labels, colony_properties):
-        """measure each colony's shape and classify edge style"""
+        # measure each colony's shape and classify edge style
         print("analyzing colony morphology")
         
         data = []
@@ -288,7 +288,7 @@ class ColonyAnalyzer:
         return self.morph_df
     
     def extract_dominant_colors(self, colony_pixels, n_colors=3):
-        """get dominant colors instead of mean"""
+        # get dominant colors instead of mean
         if len(colony_pixels) < 10:
             return np.mean(colony_pixels, axis=0)
         
@@ -305,7 +305,7 @@ class ColonyAnalyzer:
         return kmeans.cluster_centers_[dominant_label]
     
     def rgb_to_lab_batch(self, rgb_colors):
-        """convert rgb to lab color space"""
+        # convert rgb to lab color space
         rgb_normalized = rgb_colors / 255.0
         lab_colors = []
         
@@ -317,7 +317,7 @@ class ColonyAnalyzer:
         return np.array(lab_colors)
     
     def analyze_colors(self, processed_image, colony_labels, colony_properties):
-        """pick dominant color of each colony and group similar ones"""
+        # pick dominant color of each colony and group similar ones
         print("analyzing colony colors with kmeans clustering")
         
         if len(colony_properties) == 0:
@@ -392,7 +392,7 @@ class ColonyAnalyzer:
         return colony_data, clusters
     
     def analyze_density(self, processed_image, colony_labels, colony_properties, plate_mask):
-        """quantify how dense or see-through each colony appears"""
+        # quantify how dense or see-through each colony appears
         print("analyzing colony density")
         
         gray_image = cv2.cvtColor(processed_image, cv2.COLOR_RGB2GRAY)
@@ -476,7 +476,7 @@ class ColonyAnalyzer:
         return self.density_df
     
     def combine_analyses(self, morph_df, colony_data, density_df):
-        """combine morphology, color, density data and calculate comprehensive scores"""
+        # combine morphology, color, density data and calculate comprehensive scores
         print("combining all colony analysis data")
         
         # convert color data to dataframe if needed
@@ -505,7 +505,7 @@ class ColonyAnalyzer:
         return combined_df
     
     def calculate_scores(self, combined_df):
-        """compute base scores penalizing common features and rewarding rare combos"""
+        # compute base scores penalizing common features and rewarding rare combos
         scores = pd.DataFrame({'colony_id': combined_df['colony_id']})
         
         # morphological complexity
@@ -607,7 +607,7 @@ class ColonyAnalyzer:
         return scores
     
     def select_top_colonies(self, scores_df, n=20, penalty_factor=0.5):
-        """pick top scoring colonies while enforcing minimum per-cluster quota"""
+        # pick top scoring colonies while enforcing minimum per-cluster quota
         selected = []
         pool = scores_df.copy().set_index('colony_id')
         
@@ -647,7 +647,7 @@ class ColonyAnalyzer:
         return self.top_colonies
     
     def run_full_analysis(self, image_path):
-        """run complete analysis pipeline"""
+        # run complete analysis pipeline
         print("starting full colony analysis pipeline")
         
         # load and preprocess

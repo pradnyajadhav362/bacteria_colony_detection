@@ -1,28 +1,28 @@
-# 🚀 Streamlit Cloud Deployment Guide with Authentication
+#  Streamlit Cloud Deployment Guide with Authentication
 
 This guide will help you deploy your Bacterial Colony Analyzer app to Streamlit Cloud with email-based authentication.
 
-## 📋 Prerequisites
+##  Prerequisites
 
 1. **GitHub Account**: You'll need a GitHub account to host your code
 2. **Streamlit Cloud Account**: Sign up at [share.streamlit.io](https://share.streamlit.io)
 3. **Python Environment**: Make sure all dependencies are in `requirements.txt`
 
-## 🔧 Setup Steps
+##  Setup Steps
 
 ### 1. Prepare Your Repository
 
 Make sure your GitHub repository contains these files:
 ```
 your-repo/
-├── app.py                 # Main Streamlit app
-├── auth.py               # Authentication module
-├── colony_analyzer.py    # Analysis pipeline
-├── requirements.txt      # Python dependencies
-├── .streamlit/
-│   └── config.toml      # Streamlit configuration
-├── allowed_emails.txt   # List of authorized emails
-└── README.md            # Project documentation
+ app.py                 # Main Streamlit app
+ auth.py               # Authentication module
+ colony_analyzer.py    # Analysis pipeline
+ requirements.txt      # Python dependencies
+ .streamlit/
+    config.toml      # Streamlit configuration
+ allowed_emails.txt   # List of authorized emails
+ README.md            # Project documentation
 ```
 
 ### 2. Configure Authentication
@@ -82,7 +82,7 @@ def get_allowed_emails() -> List[str]:
 3. Try logging in with an authorized email
 4. Try logging in with an unauthorized email (should be denied)
 
-## 🔒 Security Features
+##  Security Features
 
 The authentication system includes:
 
@@ -92,7 +92,7 @@ The authentication system includes:
 - **Clean UI**: Professional login interface
 - **Error handling**: Clear messages for unauthorized access
 
-## 🛠️ Customization Options
+##  Customization Options
 
 ### Change Authentication Method
 
@@ -113,7 +113,7 @@ You can modify `auth.py` to use different authentication methods:
 - Audit logging
 ```
 
-## 📊 Monitoring and Management
+##  Monitoring and Management
 
 ### View Active Users
 The app shows who is currently logged in in the sidebar.
@@ -129,7 +129,7 @@ You can set these in your app settings:
 - `ALLOWED_EMAILS`: Comma-separated list of emails
 - `SECRET_KEY`: Custom secret key for sessions
 
-## 🚨 Troubleshooting
+##  Troubleshooting
 
 ### Common Issues
 
@@ -155,14 +155,14 @@ To debug authentication locally:
 streamlit run app.py --server.headless=false
 ```
 
-## 🔄 Updating the App
+##  Updating the App
 
 1. Make changes to your code
 2. Push to GitHub
 3. Streamlit Cloud automatically redeploys
 4. Test the new version
 
-## 📞 Support
+##  Support
 
 If you encounter issues:
 1. Check the Streamlit Cloud logs
@@ -170,7 +170,7 @@ If you encounter issues:
 3. Test locally first with `streamlit run app.py`
 4. Check the Streamlit documentation
 
-## 🎯 Next Steps
+##  Next Steps
 
 After deployment, you can:
 - Share the app URL with authorized users

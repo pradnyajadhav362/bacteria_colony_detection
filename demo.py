@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from colony_analyzer import ColonyAnalyzer
 
 def create_sample_petri_dish():
-    """create a sample petri dish image with simulated colonies"""
+    # create a sample petri dish image with simulated colonies
     print("creating sample petri dish image")
     
     # create base image (petri dish)
@@ -69,7 +69,7 @@ def create_sample_petri_dish():
     return image, colonies
 
 def create_sample_analysis_results(colonies):
-    """create sample analysis results for demonstration"""
+    # create sample analysis results for demonstration
     print("creating sample analysis results")
     
     # morphology data
@@ -161,8 +161,8 @@ def create_sample_analysis_results(colonies):
     return pd.DataFrame(morph_data), color_data, pd.DataFrame(density_data)
 
 def run_demo():
-    """run the complete demo"""
-    print("🔬 Bacterial Colony Analysis Demo")
+    # run the complete demo
+    print(" Bacterial Colony Analysis Demo")
     print("=" * 50)
     
     # create sample image
@@ -170,7 +170,7 @@ def run_demo():
     
     # save sample image
     cv2.imwrite("sample_petri_dish.jpg", cv2.cvtColor(sample_image, cv2.COLOR_RGB2BGR))
-    print("✅ created sample petri dish image: sample_petri_dish.jpg")
+    print(" created sample petri dish image: sample_petri_dish.jpg")
     
     # create sample analysis results
     morph_df, color_data, density_df = create_sample_analysis_results(colonies)
@@ -212,20 +212,20 @@ def run_demo():
     top_colonies = scores.nlargest(10, 'bio_interest')
     
     # display results
-    print(f"\n📊 Analysis Results:")
+    print(f"\n Analysis Results:")
     print(f"Total colonies analyzed: {len(colonies)}")
     print(f"Average colony area: {combined_df['area'].mean():.0f} px²")
     print(f"Colony forms found: {combined_df['form'].value_counts().to_dict()}")
     print(f"Color clusters: {len(combined_df['color_cluster'].unique())}")
     print(f"Density classes: {combined_df['density_class'].value_counts().to_dict()}")
     
-    print(f"\n🏆 Top 5 Colonies by Interest Score:")
+    print(f"\n Top 5 Colonies by Interest Score:")
     for i, (_, row) in enumerate(top_colonies.head().iterrows()):
         print(f"{i+1}. Colony {row['colony_id']}: Score {row['bio_interest']:.3f}, "
               f"Form: {row['form']}, Density: {row['density_class']}")
     
     # create visualizations
-    print("\n📈 Creating visualizations...")
+    print("\n Creating visualizations...")
     
     # form distribution
     plt.figure(figsize=(15, 10))
@@ -275,14 +275,14 @@ def run_demo():
     
     plt.tight_layout()
     plt.savefig('demo_results.png', dpi=150, bbox_inches='tight')
-    print("✅ saved demo results visualization: demo_results.png")
+    print(" saved demo results visualization: demo_results.png")
     
     # save data
     combined_df.to_csv('demo_colony_data.csv', index=False)
     scores.to_csv('demo_scores.csv', index=False)
-    print("✅ saved demo data: demo_colony_data.csv, demo_scores.csv")
+    print(" saved demo data: demo_colony_data.csv, demo_scores.csv")
     
-    print("\n🎉 Demo completed successfully!")
+    print("\n Demo completed successfully!")
     print("Files created:")
     print("- sample_petri_dish.jpg (sample image)")
     print("- demo_results.png (visualizations)")
