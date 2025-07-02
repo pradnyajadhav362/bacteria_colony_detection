@@ -41,8 +41,8 @@ def get_allowed_emails() -> List[str]:
     except FileNotFoundError:
         pass
     
-    # Option 4: Simple fallback for testing (remove this in production)
-    return ["prjadhav@andrew.cmu.edu"]
+    # Option 4: No hardcoded fallback for security
+    return []
 
 def authenticate():
     # Simple authentication function using Streamlit secrets
@@ -54,15 +54,10 @@ def authenticate():
         st.write("This application requires authentication to access.")
         st.write("Please enter your email address to continue.")
         
-        # Debug information
-        allowed_emails = get_allowed_emails()
-        st.write(f"Debug: Found {len(allowed_emails)} allowed emails")
-        if allowed_emails:
-            st.write(f"Debug: Allowed emails: {allowed_emails}")
-        
         email = st.text_input("Enter your email:")
         
         if st.button("Login"):
+            allowed_emails = get_allowed_emails()
             if not allowed_emails:
                 st.error("No allowed emails configured. Please set up authentication.")
                 st.stop()
@@ -79,8 +74,6 @@ def authenticate():
             else:
                 st.error("Access denied. This email is not authorized to use this application.")
                 st.info("If you believe you should have access, please contact the administrator.")
-                st.write(f"Debug: You entered: '{email_clean}'")
-                st.write(f"Debug: Allowed emails: {allowed_emails_clean}")
         
         st.stop()
     
