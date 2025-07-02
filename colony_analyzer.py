@@ -12,7 +12,12 @@ from skimage.feature import peak_local_max
 import pandas as pd
 import seaborn as sns
 import warnings
+import random
 warnings.filterwarnings('ignore')
+
+# Set all random seeds for reproducibility
+np.random.seed(42)
+random.seed(42)
 
 class ColonyAnalyzer:
     def __init__(self,
@@ -626,8 +631,13 @@ class ColonyAnalyzer:
                 cand = pool[pool['color_cluster'].isin(under)]
             else:
                 cand = pool
-            # pick best candidate
-            best = cand['bio_interest'].idxmax()
+            # pick best candidate (use deterministic sorting for ties)
+            best_candidates = cand[cand['bio_interest'] == cand['bio_interest'].max()]
+            if len(best_candidates) > 1:
+                # Sort by colony_id for deterministic selection
+                best = best_candidates.sort_values('colony_id').iloc[0].name
+            else:
+                best = cand['bio_interest'].idxmax()
             selected.append(best)
             # update quota
             if 'color_cluster' in pool:
