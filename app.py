@@ -190,15 +190,15 @@ def main():
         
         with col1:
             st.markdown("**Original Image**")
-            st.image("https://via.placeholder.com/300x200/4CAF50/FFFFFF?text=Petri+Dish", use_column_width=True)
+            st.image("https://via.placeholder.com/300x200/4CAF50/FFFFFF?text=Petri+Dish")
         
         with col2:
             st.markdown("**Detected Colonies**")
-            st.image("https://via.placeholder.com/300x200/2196F3/FFFFFF?text=Colony+Detection", use_column_width=True)
+            st.image("https://via.placeholder.com/300x200/2196F3/FFFFFF?text=Colony+Detection")
         
         with col3:
             st.markdown("**Analysis Results**")
-            st.image("https://via.placeholder.com/300x200/FF9800/FFFFFF?text=Results", use_column_width=True)
+            st.image("https://via.placeholder.com/300x200/FF9800/FFFFFF?text=Results")
 
 def display_results(results, n_top_colonies):
     # display analysis results in organized tabs
@@ -264,11 +264,11 @@ def display_overview(results):
     
     with col1:
         st.markdown("**Original Image**")
-        st.image(results['original_image'], use_column_width=True)
+        st.image(results['original_image'])
     
     with col2:
         st.markdown("**Processed Image**")
-        st.image(results['processed_image'], use_column_width=True)
+        st.image(results['processed_image'])
     
     # colony detection visualization
     st.subheader(" Colony Detection")
@@ -280,7 +280,7 @@ def display_overview(results):
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cv2.drawContours(colony_viz, contours, -1, (0, 255, 0), 2)
     
-    st.image(colony_viz, use_column_width=True, caption="Detected colonies highlighted in green")
+    st.image(colony_viz, caption="Detected colonies highlighted in green")
 
 def display_colony_details(results):
     # display detailed colony information in tables
@@ -389,7 +389,7 @@ def display_color_analysis(results):
                             cv2.drawContours(color_viz, contours, -1, color, 3)
                             break
             
-            st.image(color_viz, use_column_width=True, caption="Colonies colored by cluster")
+            st.image(color_viz, caption="Colonies colored by cluster")
     
     else:
         st.warning("No color analysis data available")
@@ -524,7 +524,7 @@ def display_top_colonies(results, n_top_colonies):
                                (int(x_center-10), int(y_center+8)),
                                cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 0), 3)
             
-            st.image(marked_image, use_column_width=True, caption="Top colonies highlighted with rankings")
+            st.image(marked_image, caption="Top colonies highlighted with rankings")
     
     else:
         st.warning("No top colonies data available")
@@ -532,7 +532,7 @@ def display_top_colonies(results, n_top_colonies):
 def display_binary_mask(results):
     st.header(" Final Binary Mask (Colonies)")
     if 'final_binary_mask' in results and results['final_binary_mask'] is not None:
-        st.image(results['final_binary_mask'], caption="Final binary mask (colonies=white)", use_column_width=True)
+        st.image(results['final_binary_mask'], caption="Final binary mask (colonies=white)")
         # Optionally overlay a grid
         import cv2
         import numpy as np
@@ -544,7 +544,7 @@ def display_binary_mask(results):
             cv2.line(grid_img, (x, 0), (x, h), (200, 200, 200), 1)
         for y in range(0, h, grid_spacing):
             cv2.line(grid_img, (0, y), (w, y), (200, 200, 200), 1)
-        st.image(grid_img, caption="Binary mask with grid overlay", use_column_width=True)
+        st.image(grid_img, caption="Binary mask with grid overlay")
     else:
         st.warning("No binary mask available.")
 
