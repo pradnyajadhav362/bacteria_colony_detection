@@ -37,13 +37,17 @@ def init_auth():
     # Initialize authentication system
     # Try to import from local_files first (for local development)
     try:
-        import sys
-        sys.path.insert(0, 'local_files')
-        from auth import EmailAuth, init_auth as local_init_auth
-        return local_init_auth()
-    except ImportError:
-        # Fallback to minimal implementation for cloud deployment
-        return _minimal_auth()
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("local_auth", "local_files/auth.py")
+        if spec and spec.loader:
+            local_auth = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(local_auth)
+            return local_auth.init_auth()
+    except (ImportError, FileNotFoundError, Exception):
+        pass
+    
+    # Fallback to minimal implementation for cloud deployment
+    return _minimal_auth()
 
 def _minimal_auth():
     # Minimal authentication for cloud deployment
