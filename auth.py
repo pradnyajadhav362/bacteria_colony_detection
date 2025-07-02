@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import time
 from typing import List, Optional
+import os
 
 class EmailAuth:
     def __init__(self, allowed_emails: List[str], secret_key: str = "your-secret-key"):
@@ -73,15 +74,20 @@ class EmailAuth:
 
 def get_allowed_emails() -> List[str]:
     # Get list of allowed email addresses
-    # You can modify this function to:
-    # 1. Read from a file
-    # 2. Connect to a database
-    # 3. Use environment variables
-    # 4. Or hardcode the list
+    # Priority 1: Environment variable (for Streamlit Cloud deployment)
+    # Priority 2: Local file (for local development)
+    # Priority 3: Hardcoded fallback
     
-    # Option 1: Read from file (recommended)
+    # Option 1: Read from environment variable (recommended for deployment)
+    emails_str = os.getenv("ALLOWED_EMAILS", "")
+    if emails_str:
+        allowed_emails = [email.strip() for email in emails_str.split(",") if email.strip()]
+        if allowed_emails:
+            return allowed_emails
+    
+    # Option 2: Read from local file (for local development)
     try:
-        with open("allowed_emails.txt", "r") as f:
+        with open("local_files/allowed_emails.txt", "r") as f:
             allowed_emails = []
             for line in f:
                 line = line.strip()
@@ -92,21 +98,9 @@ def get_allowed_emails() -> List[str]:
     except FileNotFoundError:
         pass
     
-    # Option 2: Read from environment variable
-    # import os
-    # emails_str = os.getenv("ALLOWED_EMAILS", "")
-    # if emails_str:
-    #     allowed_emails = [email.strip() for email in emails_str.split(",") if email.strip()]
-    #     if allowed_emails:
-    #         return allowed_emails
-    
     # Option 3: Hardcoded fallback
     allowed_emails = [
-        "your-email@example.com",
-        "colleague1@example.com", 
-        "colleague2@example.com",
-        "student1@university.edu",
-        "researcher@lab.org"
+        "prjadhav@gmail.com"
     ]
     
     return allowed_emails

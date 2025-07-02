@@ -25,12 +25,21 @@ A comprehensive image analysis pipeline for detecting, characterizing, and scori
 The app includes email-based authentication to control access:
 
 ### Setup Access List
-Edit `allowed_emails.txt` and add authorized email addresses:
+
+#### For Local Development:
+Create `local_files/allowed_emails.txt` and add authorized email addresses:
 ```txt
-your-email@example.com
+prjadhav@gmail.com
 colleague1@company.com
 student1@university.edu
-researcher@lab.org
+```
+
+#### For Streamlit Cloud Deployment:
+1. Go to your app in Streamlit Cloud
+2. Click "Settings" → "Secrets"
+3. Add environment variable:
+```toml
+ALLOWED_EMAILS = "prjadhav@gmail.com,colleague1@company.com,student1@university.edu"
 ```
 
 ### Authentication Features
