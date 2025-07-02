@@ -169,6 +169,11 @@ def main():
             if 'analysis_results' not in st.session_state:
                 # run analysis
                 with st.spinner(" Analyzing bacterial colonies..."):
+                    # Debug: Print parameters being used
+                    st.write("**Debug: Parameters being used:**")
+                    for key, value in params.items():
+                        st.write(f"- {key}: {value}")
+                    
                     analyzer = ColonyAnalyzer(**params)
                     results = analyzer.run_full_analysis("temp_image.jpg")
                     # add binary mask to results
