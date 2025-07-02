@@ -13,7 +13,7 @@ from PIL import Image
 import io
 import base64
 from colony_analyzer import ColonyAnalyzer
-from auth import init_auth, check_authentication
+from auth import init_auth
 
 st.set_page_config(
     page_title="Bacterial Colony Analyzer",
@@ -24,8 +24,7 @@ st.set_page_config(
 
 def main():
     # Initialize authentication
-    if not check_authentication():
-        return
+    auth = init_auth()
     
     st.title("🦠 Bacterial Colony Analyzer")
     st.caption("Advanced image analysis for petri dish colony detection and characterization")
