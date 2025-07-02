@@ -643,6 +643,41 @@ def display_binary_mask(results, n_top_colonies):
             cv2.line(grid_img, (0, y), (w, y), (200, 200, 200), 1)
         st.image(grid_img, caption="Binary mask with grid overlay")
         
+        # Show top colonies highlighted on binary mask
+        if 'top_colonies' in results and not results['top_colonies'].empty:
+            st.subheader(" Top Colonies Highlighted on Binary Mask")
+            
+            # Create highlighted binary mask
+            highlighted_mask = grid_img.copy()
+            colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255)]
+            
+            actual_n_top = min(n_top_colonies, len(results['top_colonies']))
+            top_colonies = results['top_colonies'].head(actual_n_top)
+            
+            for idx, row in top_colonies.iterrows():
+                colony_id = row['colony_id']
+                rank = idx + 1
+                color = colors[idx % len(colors)]
+                
+                prop = results['colony_properties'][colony_id]
+                colony_mask = (results['colony_labels'] == prop.label).astype(np.uint8)
+                contours, _ = cv2.findContours(colony_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                
+                if contours:
+                    # Draw colored outline
+                    cv2.drawContours(highlighted_mask, contours, -1, color, thickness=6)
+                    
+                    # Add rank number
+                    y_center, x_center = prop.centroid
+                    center_point = (int(x_center), int(y_center))
+                    cv2.circle(highlighted_mask, center_point, 25, (255, 255, 255), -1)
+                    cv2.circle(highlighted_mask, center_point, 25, color, 3)
+                    cv2.putText(highlighted_mask, str(rank),
+                               (int(x_center-10), int(y_center+8)),
+                               cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 0), 3)
+            
+            st.image(highlighted_mask, caption=f"Top {actual_n_top} colonies highlighted on binary mask")
+        
         # Show zoomed views of top colonies on binary mask
         if 'top_colonies' in results and not results['top_colonies'].empty:
             st.subheader(" Zoomed Views of Top Colonies")
