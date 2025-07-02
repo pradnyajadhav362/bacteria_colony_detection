@@ -29,7 +29,7 @@ The app includes email-based authentication to control access:
 #### For Local Development:
 Create `local_files/allowed_emails.txt` and add authorized email addresses:
 ```txt
-prjadhav@gmail.com
+prjadhav@andrew.cmu.edu
 colleague1@company.com
 student1@university.edu
 ```
@@ -39,7 +39,7 @@ student1@university.edu
 2. Click "Settings" → "Secrets"
 3. Add environment variable:
 ```toml
-ALLOWED_EMAILS = "prjadhav@gmail.com,colleague1@company.com,student1@university.edu"
+ALLOWED_EMAILS = "prjadhav@andrew.cmu.edu,colleague1@company.com,student1@university.edu"
 ```
 
 ### Authentication Features

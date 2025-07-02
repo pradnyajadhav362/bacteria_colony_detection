@@ -76,7 +76,6 @@ def get_allowed_emails() -> List[str]:
     # Get list of allowed email addresses
     # Priority 1: Environment variable (for Streamlit Cloud deployment)
     # Priority 2: Local file (for local development)
-    # Priority 3: Hardcoded fallback
     
     # Option 1: Read from environment variable (recommended for deployment)
     emails_str = os.getenv("ALLOWED_EMAILS", "")
@@ -98,12 +97,8 @@ def get_allowed_emails() -> List[str]:
     except FileNotFoundError:
         pass
     
-    # Option 3: Hardcoded fallback
-    allowed_emails = [
-        "prjadhav@gmail.com"
-    ]
-    
-    return allowed_emails
+    # No hardcoded fallback - user must set up environment variable or local file
+    return []
 
 def init_auth():
     # Initialize authentication system
