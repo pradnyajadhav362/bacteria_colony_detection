@@ -8,7 +8,8 @@ from typing import List
 def get_allowed_emails() -> List[str]:
     # Get list of allowed email addresses
     # Priority 1: Environment variable (for Streamlit Cloud deployment)
-    # Priority 2: Local file (for local development)
+    # Priority 2: Streamlit secrets (for Streamlit Cloud)
+    # Priority 3: Local file (for local development)
     
     # Option 1: Read from environment variable (recommended for deployment)
     emails_str = os.getenv("ALLOWED_EMAILS", "")
@@ -17,7 +18,18 @@ def get_allowed_emails() -> List[str]:
         if allowed_emails:
             return allowed_emails
     
-    # Option 2: Read from local file (for local development)
+    # Option 2: Read from Streamlit secrets
+    try:
+        if hasattr(st, 'secrets') and st.secrets:
+            emails_str = st.secrets.get("ALLOWED_EMAILS", "")
+            if emails_str:
+                allowed_emails = [email.strip() for email in emails_str.split(",") if email.strip()]
+                if allowed_emails:
+                    return allowed_emails
+    except Exception:
+        pass
+    
+    # Option 3: Read from local file (for local development)
     try:
         with open("local_files/allowed_emails.txt", "r") as f:
             allowed_emails = []
