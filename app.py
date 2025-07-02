@@ -13,7 +13,7 @@ from PIL import Image
 import io
 import base64
 from colony_analyzer import ColonyAnalyzer
-from auth import init_auth
+from auth import init_auth, check_authentication
 
 st.set_page_config(
     page_title="Bacterial Colony Analyzer",
@@ -24,59 +24,62 @@ st.set_page_config(
 
 def main():
     # Initialize authentication
-    auth = init_auth()
+    if not check_authentication():
+        return
     
-    st.title(" Bacterial Colony Analysis Pipeline")
-    st.markdown("---")
+    st.title("🦠 Bacterial Colony Analyzer")
+    st.caption("Advanced image analysis for petri dish colony detection and characterization")
     
-    # sidebar for file upload and parameters
+    # sidebar for parameters
     with st.sidebar:
-        st.header(" Upload Image")
-        uploaded_file = st.file_uploader(
-            "Choose a petri dish image",
-            type=['png', 'jpg', 'jpeg'],
-            help="Upload a high-resolution image of a petri dish with bacterial colonies"
-        )
-        st.header(" Preprocessing Parameters")
-        st.caption("Adjust image quality and contrast settings")
+        st.header("📁 Upload Image")
+        uploaded_file = st.file_uploader("Choose a petri dish image", 
+                                        type=['png', 'jpg', 'jpeg'],
+                                        help="Upload a high-resolution image of a petri dish")
         
-        bilateral_d = st.slider("Bilateral filter diameter", 3, 21, 9, step=2, 
-                               help="Diameter of pixel neighborhood for noise reduction (higher = smoother)")
-        bilateral_sigma_color = st.slider("Bilateral sigmaColor", 10, 150, 75,
-                                         help="Color space sigma for noise filtering (higher = more blur)")
-        bilateral_sigma_space = st.slider("Bilateral sigmaSpace", 10, 150, 75,
-                                         help="Coordinate space sigma for noise filtering (higher = more blur)")
-        clahe_clip_limit = st.slider("CLAHE clip limit", 1.0, 10.0, 3.0,
-                                    help="Contrast enhancement limit (higher = more contrast)")
-        clahe_tile_grid = st.slider("CLAHE tile grid size", 2, 32, 8,
-                                   help="Grid size for contrast enhancement (smaller = more local)")
-        gamma = st.slider("Gamma correction", 0.5, 2.5, 1.2,
-                         help="Brightness adjustment (1.0 = normal, <1 = brighter, >1 = darker)")
-        sharpen_strength = st.slider("Sharpen strength", 0.0, 2.0, 1.0,
-                                    help="Edge sharpening intensity (0 = no sharpening)")
-        st.header(" Plate Detection")
-        st.caption("Configure how the petri dish boundary is detected")
+        st.header("⚙️ Analysis Parameters")
+        st.caption("Adjust image processing settings")
         
-        margin_percent = st.slider("Plate edge margin (%)", 1, 20, 8, 
-                                  help="Percentage of edge to exclude from analysis") / 100.0
+        bilateral_d = st.slider("Bilateral filter diameter", 5, 15, 9,
+                               help="Diameter of pixel neighborhood for bilateral filtering")
+        bilateral_sigma_color = st.slider("Bilateral color sigma", 25, 150, 75,
+                                         help="Filter sigma in color space")
+        bilateral_sigma_space = st.slider("Bilateral space sigma", 25, 150, 75,
+                                         help="Filter sigma in coordinate space")
         
-        st.header(" Segmentation")
-        st.caption("Settings for detecting individual colonies")
+        clahe_clip_limit = st.slider("CLAHE clip limit", 1.0, 5.0, 3.0, 0.1,
+                                    help="Contrast limiting threshold")
+        clahe_tile_grid = st.slider("CLAHE tile grid size", 4, 16, 8,
+                                   help="Size of grid for histogram equalization")
         
-        adaptive_block_size = st.slider("Adaptive threshold block size (odd)", 11, 51, 15, step=2,
-                                       help="Local area size for threshold calculation (must be odd)")
+        gamma = st.slider("Gamma correction", 0.5, 2.0, 1.2, 0.1,
+                         help="Gamma value for brightness adjustment")
+        sharpen_strength = st.slider("Sharpen strength", 0.0, 2.0, 1.0, 0.1,
+                                    help="Strength of image sharpening")
+        
+        st.header("🔍 Colony Detection")
+        st.caption("Configure colony segmentation parameters")
+        
+        margin_percent = st.slider("Plate margin (%)", 0.05, 0.20, 0.08, 0.01,
+                                  help="Percentage of image edges to exclude from plate detection")
+        
+        adaptive_block_size = st.slider("Adaptive threshold block size", 11, 25, 15, 2,
+                                       help="Block size for adaptive thresholding (must be odd)")
         adaptive_c = st.slider("Adaptive threshold C", 1, 10, 3,
                               help="Constant subtracted from mean for thresholding")
-        min_colony_size = st.slider("Min colony size (pixels)", 5, 200, 15,
-                                   help="Smallest colony area to consider valid")
-        max_colony_size = st.slider("Max colony size (pixels)", 500, 20000, 10000,
-                                   help="Largest colony area to consider valid")
-        min_distance = st.slider("Min distance for peak_local_max", 3, 20, 8,
-                                help="Minimum distance between colony centers")
-        watershed = st.checkbox("Use watershed for splitting colonies", value=True,
-                               help="Separate touching colonies using watershed algorithm")
-        st.header(" Color Clustering")
-        st.caption("Group colonies by similar colors")
+        
+        min_colony_size = st.slider("Minimum colony size", 10, 50, 15,
+                                   help="Minimum area (pixels) for a valid colony")
+        max_colony_size = st.slider("Maximum colony size", 5000, 20000, 10000,
+                                   help="Maximum area (pixels) for a valid colony")
+        
+        min_distance = st.slider("Minimum distance between colonies", 5, 15, 8,
+                                help="Minimum distance for watershed separation")
+        watershed = st.checkbox("Use watershed separation", value=True,
+                               help="Use watershed algorithm to separate touching colonies")
+        
+        st.header("🎨 Color Analysis")
+        st.caption("Configure color clustering parameters")
         
         color_n_clusters = st.number_input("Number of color clusters (0=auto)", 0, 10, 0,
                                           help="Number of color groups (0 = automatic detection)")
@@ -102,6 +105,7 @@ def main():
                                         help="Extract and cluster colony colors")
         run_density_analysis = st.checkbox("Analyze density", value=True,
                                           help="Measure colony opacity and texture")
+        
         # Store current parameters in session state
         current_params = dict(
                     bilateral_d=bilateral_d,
@@ -151,11 +155,7 @@ def main():
             uploaded_file = st.session_state.uploaded_file
             stored_params = st.session_state.get('params', {})
             
-            # Check if parameters have changed by comparing with current sidebar value
-            # We need to get the current value from the sidebar without creating a duplicate slider
-            current_n_top_colonies = stored_params.get('n_top_colonies', 20)
-            
-            # Update stored params with current slider value
+            # Use stored parameters
             params = stored_params.copy()
             
             # save uploaded file temporarily
