@@ -142,13 +142,16 @@ def main():
             
             # run analysis
             with st.spinner(" Analyzing bacterial colonies..."):
+                st.write(f"Debug: n_top_colonies parameter = {params.get('n_top_colonies', 'NOT FOUND')}")
                 analyzer = ColonyAnalyzer(**params)
                 results = analyzer.run_full_analysis("temp_image.jpg")
                 # add binary mask to results
                 if hasattr(analyzer, 'final_binary_mask'):
                     results['final_binary_mask'] = analyzer.final_binary_mask
+                st.write(f"Debug: Number of top colonies in results = {len(results['top_colonies']) if 'top_colonies' in results else 'NOT FOUND'}")
             
             if results is not None:
+                st.write(f"Debug: Calling display_results with n_top_colonies = {params.get('n_top_colonies', 20)}")
                 display_results(results, params.get('n_top_colonies', 20))
             else:
                 st.error(" Analysis failed. Please check your image and try again.")
@@ -460,6 +463,7 @@ def display_morphology_analysis(results):
 
 def display_top_colonies(results, n_top_colonies):
     # display top-scoring colonies with visualizations
+    st.write(f"Debug: display_top_colonies called with n_top_colonies = {n_top_colonies}")
     st.header(f" Top {n_top_colonies} Colonies")
     
     if 'top_colonies' in results and not results['top_colonies'].empty:
