@@ -1,0 +1,6 @@
+# Allowed email addresses for Bacterial Colony Analyzer
+# Add one email per line
+# Lines starting with # are comments
+
+# Replace these with actual email addresses
+prjadhav@andrew.cmu.edu
