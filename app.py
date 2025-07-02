@@ -209,21 +209,7 @@ def main():
         - High resolution recommended for best results
         """)
         
-        # example workflow
-        st.subheader("How It Works")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.markdown("**1. Upload Image**")
-            st.markdown("Upload a high-resolution petri dish image")
-        
-        with col2:
-            st.markdown("**2. Run Analysis**")
-            st.markdown("Click 'Run Analysis' to detect and analyze colonies")
-        
-        with col3:
-            st.markdown("**3. View Results**")
-            st.markdown("Explore detailed results in the tabs below")
+
 
 def display_results(results, n_top_colonies):
     # display analysis results in organized tabs
