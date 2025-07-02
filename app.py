@@ -150,8 +150,16 @@ def main():
             uploaded_file = st.session_state.uploaded_file
             stored_params = st.session_state.get('params', {})
             
-            # Use stored parameters
+            # Use stored parameters and convert old parameter names to new ones
             params = stored_params.copy()
+            
+            # Convert old parameter names to new ones for ColonyAnalyzer compatibility
+            if 'watershed_min_distance' in params:
+                params['min_distance'] = params.pop('watershed_min_distance')
+            if 'watershed_threshold' in params:
+                params.pop('watershed_threshold')  # Remove unused parameter
+            if 'watershed' not in params:
+                params['watershed'] = True  # Add required parameter
             
             # save uploaded file temporarily
             with open("temp_image.jpg", "wb") as f:
