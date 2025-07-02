@@ -541,7 +541,7 @@ def display_top_colonies(results, n_top_colonies):
             zoom_size = 100  # pixels around colony
             
             # Create columns for zoomed views
-            cols = st.columns(5)
+            cols = st.columns(n_top_colonies)
             
             for idx, (col_idx, row) in enumerate(zip(cols, top_df.iterrows())):
                 colony_id = row[1]['colony_id']
@@ -617,11 +617,14 @@ def display_binary_mask(results):
         if 'top_colonies' in results and not results['top_colonies'].empty:
             st.subheader(" Zoomed Views of Top Colonies")
             
-            top_colonies = results['top_colonies'].head(5)  # Show top 5
+            n_top_colonies = len(results['top_colonies']) if len(results['top_colonies']) < 5 else 5
+            if 'n_top_colonies' in results:
+                n_top_colonies = results['n_top_colonies']
+            top_colonies = results['top_colonies'].head(n_top_colonies)
             zoom_size = 100  # pixels around colony
             
             # Create columns for zoomed views
-            cols = st.columns(5)
+            cols = st.columns(n_top_colonies)
             
             for idx, (col_idx, row) in enumerate(zip(cols, top_colonies.iterrows())):
                 colony_id = row[1]['colony_id']
