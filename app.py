@@ -210,7 +210,7 @@ def main():
         """)
         
         # example image
-        st.subheader(" Example Analysis")
+        st.subheader("Example Analysis")
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -229,12 +229,12 @@ def display_results(results, n_top_colonies):
     # display analysis results in organized tabs
     
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        " Overview", 
-        " Colony Details", 
-        " Color Analysis", 
-        " Morphology", 
-        " Top Colonies",
-        " Binary Mask & Grid"
+        "Overview", 
+        "Colony Details", 
+        "Color Analysis", 
+        "Morphology", 
+        "Top Colonies",
+        "Binary Mask & Grid"
     ])
     
     with tab1:
@@ -257,7 +257,7 @@ def display_results(results, n_top_colonies):
 
 def display_overview(results):
     # display overview statistics and key metrics
-    st.header(" Analysis Overview")
+    st.header("Analysis Overview")
     
     # key metrics
     col1, col2, col3, col4 = st.columns(4)
@@ -284,7 +284,7 @@ def display_overview(results):
             st.metric("Circular Colonies", "N/A")
     
     # image comparison
-    st.subheader(" Image Processing Results")
+    st.subheader("Image Processing Results")
     col1, col2 = st.columns(2)
     
     with col1:
@@ -296,7 +296,7 @@ def display_overview(results):
         st.image(results['processed_image'])
     
     # colony detection visualization
-    st.subheader(" Colony Detection")
+    st.subheader("Colony Detection")
     
     # create visualization of detected colonies
     colony_viz = results['processed_image'].copy()
@@ -309,7 +309,7 @@ def display_overview(results):
 
 def display_colony_details(results):
     # display detailed colony information in tables
-    st.header(" Colony Details")
+    st.header("Colony Details")
     
     if 'combined_df' in results and not results['combined_df'].empty:
         df = results['combined_df']
@@ -373,7 +373,7 @@ def display_colony_details(results):
 
 def display_color_analysis(results):
     # display color clustering results
-    st.header(" Color Analysis")
+    st.header("Color Analysis")
     
     if 'colony_data' in results and results['colony_data']:
         colony_data = results['colony_data']
@@ -421,7 +421,7 @@ def display_color_analysis(results):
 
 def display_morphology_analysis(results):
     # display morphology analysis results
-    st.header(" Morphology Analysis")
+    st.header("Morphology Analysis")
     
     if 'morph_df' in results and not results['morph_df'].empty:
         df = results['morph_df']
@@ -485,7 +485,7 @@ def display_morphology_analysis(results):
 
 def display_top_colonies(results, n_top_colonies):
     # display top-scoring colonies with visualizations
-    st.header(f" Top {n_top_colonies} Colonies")
+    st.header(f"Top {n_top_colonies} Colonies")
     
     if 'top_colonies' in results and not results['top_colonies'].empty:
         # Use the current slider value to limit display, not the backend selection
@@ -622,7 +622,7 @@ def display_top_colonies(results, n_top_colonies):
         st.warning("No top colonies data available")
 
 def display_binary_mask(results, n_top_colonies):
-    st.header(" Final Binary Mask (Colonies)")
+    st.header("Final Binary Mask (Colonies)")
     if 'final_binary_mask' in results and results['final_binary_mask'] is not None:
         st.image(results['final_binary_mask'], caption="Final binary mask (colonies=white)")
         
