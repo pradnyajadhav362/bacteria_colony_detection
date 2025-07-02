@@ -1,19 +1,11 @@
-# Core image processing and analysis
-opencv-python>=4.8.0
-scikit-image>=0.20.0
-scikit-learn>=1.3.0
-numpy>=1.24.0
-scipy>=1.11.0
-Pillow>=9.5.0
-
-# Data analysis and visualization
-pandas>=2.0.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
-plotly>=5.15.0
-
-# Streamlit and web framework
-streamlit>=1.28.0
-
-# Additional dependencies that might be needed
-typing-extensions>=4.5.0 
+streamlit
+opencv-python
+scikit-image
+scikit-learn
+pandas
+matplotlib
+seaborn
+plotly
+numpy
+scipy
+Pillow 
