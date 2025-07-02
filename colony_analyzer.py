@@ -556,7 +556,7 @@ class ColonyAnalyzer:
         
         # margin preference
         if 'margin' in combined_df:
-            interest = {'smooth':0.2,'rough':0.6,'irregular':1.0,'lobate':0.8}
+            interest = {'entire':0.2,'undulate':0.6,'serrate':1.0,'lobate':0.8,'unknown':0.5}
             scores['margin_score'] = combined_df['margin'].map(lambda x: interest.get(x,0.5))
         else:
             scores['margin_score'] = 0.5
