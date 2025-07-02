@@ -38,33 +38,70 @@ def main():
             help="Upload a high-resolution image of a petri dish with bacterial colonies"
         )
         st.header(" Preprocessing Parameters")
-        bilateral_d = st.slider("Bilateral filter diameter", 3, 21, 9, step=2)
-        bilateral_sigma_color = st.slider("Bilateral sigmaColor", 10, 150, 75)
-        bilateral_sigma_space = st.slider("Bilateral sigmaSpace", 10, 150, 75)
-        clahe_clip_limit = st.slider("CLAHE clip limit", 1.0, 10.0, 3.0)
-        clahe_tile_grid = st.slider("CLAHE tile grid size", 2, 32, 8)
-        gamma = st.slider("Gamma correction", 0.5, 2.5, 1.2)
-        sharpen_strength = st.slider("Sharpen strength", 0.0, 2.0, 1.0)
+        st.caption("Adjust image quality and contrast settings")
+        
+        bilateral_d = st.slider("Bilateral filter diameter", 3, 21, 9, step=2, 
+                               help="Diameter of pixel neighborhood for noise reduction (higher = smoother)")
+        bilateral_sigma_color = st.slider("Bilateral sigmaColor", 10, 150, 75,
+                                         help="Color space sigma for noise filtering (higher = more blur)")
+        bilateral_sigma_space = st.slider("Bilateral sigmaSpace", 10, 150, 75,
+                                         help="Coordinate space sigma for noise filtering (higher = more blur)")
+        clahe_clip_limit = st.slider("CLAHE clip limit", 1.0, 10.0, 3.0,
+                                    help="Contrast enhancement limit (higher = more contrast)")
+        clahe_tile_grid = st.slider("CLAHE tile grid size", 2, 32, 8,
+                                   help="Grid size for contrast enhancement (smaller = more local)")
+        gamma = st.slider("Gamma correction", 0.5, 2.5, 1.2,
+                         help="Brightness adjustment (1.0 = normal, <1 = brighter, >1 = darker)")
+        sharpen_strength = st.slider("Sharpen strength", 0.0, 2.0, 1.0,
+                                    help="Edge sharpening intensity (0 = no sharpening)")
         st.header(" Plate Detection")
-        margin_percent = st.slider("Plate edge margin (%)", 1, 20, 8) / 100.0
+        st.caption("Configure how the petri dish boundary is detected")
+        
+        margin_percent = st.slider("Plate edge margin (%)", 1, 20, 8, 
+                                  help="Percentage of edge to exclude from analysis") / 100.0
+        
         st.header(" Segmentation")
-        adaptive_block_size = st.slider("Adaptive threshold block size (odd)", 11, 51, 15, step=2)
-        adaptive_c = st.slider("Adaptive threshold C", 1, 10, 3)
-        min_colony_size = st.slider("Min colony size (pixels)", 5, 200, 15)
-        max_colony_size = st.slider("Max colony size (pixels)", 500, 20000, 10000)
-        min_distance = st.slider("Min distance for peak_local_max", 3, 20, 8)
-        watershed = st.checkbox("Use watershed for splitting colonies", value=True)
+        st.caption("Settings for detecting individual colonies")
+        
+        adaptive_block_size = st.slider("Adaptive threshold block size (odd)", 11, 51, 15, step=2,
+                                       help="Local area size for threshold calculation (must be odd)")
+        adaptive_c = st.slider("Adaptive threshold C", 1, 10, 3,
+                              help="Constant subtracted from mean for thresholding")
+        min_colony_size = st.slider("Min colony size (pixels)", 5, 200, 15,
+                                   help="Smallest colony area to consider valid")
+        max_colony_size = st.slider("Max colony size (pixels)", 500, 20000, 10000,
+                                   help="Largest colony area to consider valid")
+        min_distance = st.slider("Min distance for peak_local_max", 3, 20, 8,
+                                help="Minimum distance between colony centers")
+        watershed = st.checkbox("Use watershed for splitting colonies", value=True,
+                               help="Separate touching colonies using watershed algorithm")
         st.header(" Color Clustering")
-        color_n_clusters = st.number_input("Number of color clusters (0=auto)", 0, 10, 0)
-        color_random_state = st.number_input("KMeans random state", 0, 100, 42)
-        color_n_init = st.slider("KMeans n_init", 1, 20, 10)
+        st.caption("Group colonies by similar colors")
+        
+        color_n_clusters = st.number_input("Number of color clusters (0=auto)", 0, 10, 0,
+                                          help="Number of color groups (0 = automatic detection)")
+        color_random_state = st.number_input("KMeans random state", 0, 100, 42,
+                                            help="Random seed for consistent color clustering")
+        color_n_init = st.slider("KMeans n_init", 1, 20, 10,
+                                help="Number of times to run K-means with different seeds")
+        
         st.header(" Top Colonies & Scoring")
-        n_top_colonies = st.slider("Number of top colonies to display", 5, 50, 20)
-        penalty_factor = st.slider("Penalty factor for diversity", 0.0, 1.0, 0.5)
+        st.caption("Select and rank the most interesting colonies")
+        
+        n_top_colonies = st.slider("Number of top colonies to display", 5, 50, 20,
+                                  help="How many highest-scoring colonies to show")
+        penalty_factor = st.slider("Penalty factor for diversity", 0.0, 1.0, 0.5,
+                                  help="Reduce score for similar colonies (higher = more diverse selection)")
+        
         st.header(" Analysis Options")
-        run_morphology = st.checkbox("Analyze morphology", value=True)
-        run_color_analysis = st.checkbox("Analyze colors", value=True)
-        run_density_analysis = st.checkbox("Analyze density", value=True)
+        st.caption("Choose which analyses to run")
+        
+        run_morphology = st.checkbox("Analyze morphology", value=True,
+                                    help="Measure colony shape, size, and edge characteristics")
+        run_color_analysis = st.checkbox("Analyze colors", value=True,
+                                        help="Extract and cluster colony colors")
+        run_density_analysis = st.checkbox("Analyze density", value=True,
+                                          help="Measure colony opacity and texture")
         if st.button(" Run Analysis", type="primary"):
             if uploaded_file is not None:
                 st.session_state.run_analysis = True
