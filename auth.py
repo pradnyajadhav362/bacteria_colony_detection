@@ -67,7 +67,11 @@ def authenticate():
                 st.error("No allowed emails configured. Please set up authentication.")
                 st.stop()
             
-            if email in allowed_emails:
+            # Normalize email for comparison (lowercase and strip whitespace)
+            email_clean = email.lower().strip()
+            allowed_emails_clean = [e.lower().strip() for e in allowed_emails]
+            
+            if email_clean in allowed_emails_clean:
                 st.session_state.authenticated = True
                 st.session_state.user_email = email
                 st.success(f"Welcome, {email}!")
@@ -75,6 +79,8 @@ def authenticate():
             else:
                 st.error("Access denied. This email is not authorized to use this application.")
                 st.info("If you believe you should have access, please contact the administrator.")
+                st.write(f"Debug: You entered: '{email_clean}'")
+                st.write(f"Debug: Allowed emails: {allowed_emails_clean}")
         
         st.stop()
     
