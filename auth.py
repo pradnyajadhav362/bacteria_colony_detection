@@ -1,4 +1,4 @@
-# auth.py - Minimal implementation for both local and cloud deployment
+# auth.py - Streamlit Secrets Authentication
 # This file is public on GitHub but contains no sensitive data
 
 import streamlit as st
@@ -7,27 +7,25 @@ from typing import List
 
 def get_allowed_emails() -> List[str]:
     # Get list of allowed email addresses
-    # Priority 1: Environment variable (for Streamlit Cloud deployment)
-    # Priority 2: Streamlit secrets (for Streamlit Cloud)
+    # Priority 1: Streamlit secrets (recommended for deployment)
+    # Priority 2: Environment variable (fallback)
     # Priority 3: Local file (for local development)
     
-    # Option 1: Read from environment variable (recommended for deployment)
+    # Option 1: Read from Streamlit secrets (recommended)
+    try:
+        if hasattr(st, 'secrets') and st.secrets:
+            allowed_emails = st.secrets.get("auth", {}).get("allowed_emails", [])
+            if allowed_emails:
+                return allowed_emails
+    except Exception:
+        pass
+    
+    # Option 2: Read from environment variable (fallback)
     emails_str = os.getenv("ALLOWED_EMAILS", "")
     if emails_str:
         allowed_emails = [email.strip() for email in emails_str.split(",") if email.strip()]
         if allowed_emails:
             return allowed_emails
-    
-    # Option 2: Read from Streamlit secrets
-    try:
-        if hasattr(st, 'secrets') and st.secrets:
-            emails_str = st.secrets.get("ALLOWED_EMAILS", "")
-            if emails_str:
-                allowed_emails = [email.strip() for email in emails_str.split(",") if email.strip()]
-                if allowed_emails:
-                    return allowed_emails
-    except Exception:
-        pass
     
     # Option 3: Read from local file (for local development)
     try:
@@ -42,12 +40,55 @@ def get_allowed_emails() -> List[str]:
     except FileNotFoundError:
         pass
     
-    # No hardcoded fallback - user must set up environment variable or local file
+    # No hardcoded fallback - user must set up secrets or environment variable
     return []
+
+def authenticate():
+    # Simple authentication function using Streamlit secrets
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+    
+    if not st.session_state.authenticated:
+        st.title("Bacterial Colony Analyzer - Authentication Required")
+        st.write("This application requires authentication to access.")
+        st.write("Please enter your email address to continue.")
+        
+        email = st.text_input("Enter your email:")
+        
+        if st.button("Login"):
+            allowed_emails = get_allowed_emails()
+            if not allowed_emails:
+                st.error("No allowed emails configured. Please set up authentication.")
+                st.stop()
+            
+            if email in allowed_emails:
+                st.session_state.authenticated = True
+                st.session_state.user_email = email
+                st.success(f"Welcome, {email}!")
+                st.rerun()
+            else:
+                st.error("Access denied. This email is not authorized to use this application.")
+                st.info("If you believe you should have access, please contact the administrator.")
+        
+        st.stop()
+    
+    return st.session_state.authenticated
+
+def show_user_info():
+    # Display current user information
+    if 'user_email' in st.session_state:
+        st.sidebar.markdown("---")
+        st.sidebar.markdown(f"** Logged in as:** {st.session_state.user_email}")
+        if st.sidebar.button(" Logout"):
+            if 'authenticated' in st.session_state:
+                del st.session_state.authenticated
+            if 'user_email' in st.session_state:
+                del st.session_state.user_email
+            st.rerun()
 
 def init_auth():
     # Initialize authentication system
-    # Try to import from local_files first (for local development)
+    # Try to import from local_files first (for local development with full features)
     try:
         import importlib.util
         spec = importlib.util.spec_from_file_location("local_auth", "local_files/auth.py")
@@ -58,54 +99,7 @@ def init_auth():
     except (ImportError, FileNotFoundError, Exception):
         pass
     
-    # Fallback to minimal implementation for cloud deployment
-    return _minimal_auth()
-
-def _minimal_auth():
-    # Minimal authentication for cloud deployment
-    allowed_emails = get_allowed_emails()
-    
-    if not allowed_emails:
-        st.error("No allowed emails configured. Please set ALLOWED_EMAILS environment variable.")
-        st.stop()
-    
-    # Simple authentication check
-    if 'authenticated' not in st.session_state:
-        st.session_state.authenticated = False
-    
-    if not st.session_state.authenticated:
-        st.markdown("""
-        # Bacterial Colony Analyzer - Authentication Required
-        
-        This application requires authentication to access.
-        Please enter your email address to continue.
-        """)
-        
-        with st.form("login_form"):
-            email = st.text_input("Email Address", placeholder="Enter your email address")
-            submitted = st.form_submit_button("Login")
-            
-            if submitted:
-                if email.lower().strip() in [e.lower().strip() for e in allowed_emails]:
-                    st.session_state.authenticated = True
-                    st.session_state.user_email = email
-                    st.success(f"Welcome, {email}!")
-                    st.rerun()
-                else:
-                    st.error(" Access denied. This email is not authorized to use this application.")
-                    st.info("If you believe you should have access, please contact the administrator.")
-        
-        st.stop()
-    
-    # Show user info
-    if 'user_email' in st.session_state:
-        st.sidebar.markdown("---")
-        st.sidebar.markdown(f"** Logged in as:** {st.session_state.user_email}")
-        if st.sidebar.button(" Logout"):
-            if 'authenticated' in st.session_state:
-                del st.session_state.authenticated
-            if 'user_email' in st.session_state:
-                del st.session_state.user_email
-            st.rerun()
-    
-    return None  # No auth object needed for minimal implementation 
+    # Fallback to simple authentication for cloud deployment
+    authenticate()
+    show_user_info()
+    return None 
