@@ -26,7 +26,7 @@ def main():
     # Initialize authentication
     auth = init_auth()
     
-    st.title("🦠 Bacterial Colony Analyzer")
+    st.title("Bacterial Colony Analyzer")
     st.caption("Advanced image analysis for petri dish colony detection and characterization")
     
     # sidebar for parameters
