@@ -1,76 +1,9 @@
-# auth.py
-# email-based authentication for streamlit app
+# auth.py - Minimal implementation for both local and cloud deployment
+# This file is public on GitHub but contains no sensitive data
 
 import streamlit as st
-import hashlib
-import hmac
-import time
-from typing import List, Optional
 import os
-
-class EmailAuth:
-    def __init__(self, allowed_emails: List[str], secret_key: str = "your-secret-key"):
-        # Initialize email-based authentication
-        # Args:
-        #     allowed_emails: List of email addresses that are allowed to access the app
-        #     secret_key: Secret key for session management
-        self.allowed_emails = [email.lower().strip() for email in allowed_emails]
-        self.secret_key = secret_key
-        
-    def check_auth(self) -> bool:
-        # Check if user is authenticated
-        if 'authenticated' not in st.session_state:
-            st.session_state.authenticated = False
-        return st.session_state.authenticated
-    
-    def login_page(self) -> bool:
-        # Display login page and return True if authentication successful
-        st.markdown("""
-        # Bacterial Colony Analyzer - Authentication Required
-        
-        This application requires authentication to access.
-        Please enter your email address to continue.
-        """)
-        
-        with st.form("login_form"):
-            email = st.text_input("Email Address", placeholder="Enter your email address")
-            submitted = st.form_submit_button("Login")
-            
-            if submitted:
-                if self.authenticate_user(email):
-                    st.session_state.authenticated = True
-                    st.session_state.user_email = email
-                    st.success(f"Welcome, {email}!")
-                    st.rerun()
-                else:
-                    st.error(" Access denied. This email is not authorized to use this application.")
-                    st.info("If you believe you should have access, please contact the administrator.")
-        
-        return False
-    
-    def authenticate_user(self, email: str) -> bool:
-        # Authenticate user based on email
-        if not email:
-            return False
-        
-        email_clean = email.lower().strip()
-        return email_clean in self.allowed_emails
-    
-    def logout(self):
-        # Logout user
-        if 'authenticated' in st.session_state:
-            del st.session_state.authenticated
-        if 'user_email' in st.session_state:
-            del st.session_state.user_email
-    
-    def show_user_info(self):
-        # Display current user information
-        if 'user_email' in st.session_state:
-            st.sidebar.markdown("---")
-            st.sidebar.markdown(f"** Logged in as:** {st.session_state.user_email}")
-            if st.sidebar.button(" Logout"):
-                self.logout()
-                st.rerun()
+from typing import List
 
 def get_allowed_emails() -> List[str]:
     # Get list of allowed email addresses
@@ -102,12 +35,61 @@ def get_allowed_emails() -> List[str]:
 
 def init_auth():
     # Initialize authentication system
+    # Try to import from local_files first (for local development)
+    try:
+        import sys
+        sys.path.insert(0, 'local_files')
+        from auth import EmailAuth, init_auth as local_init_auth
+        return local_init_auth()
+    except ImportError:
+        # Fallback to minimal implementation for cloud deployment
+        return _minimal_auth()
+
+def _minimal_auth():
+    # Minimal authentication for cloud deployment
     allowed_emails = get_allowed_emails()
-    auth = EmailAuth(allowed_emails)
     
-    if not auth.check_auth():
-        auth.login_page()
+    if not allowed_emails:
+        st.error("No allowed emails configured. Please set ALLOWED_EMAILS environment variable.")
         st.stop()
     
-    auth.show_user_info()
-    return auth 
+    # Simple authentication check
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
+    
+    if not st.session_state.authenticated:
+        st.markdown("""
+        # Bacterial Colony Analyzer - Authentication Required
+        
+        This application requires authentication to access.
+        Please enter your email address to continue.
+        """)
+        
+        with st.form("login_form"):
+            email = st.text_input("Email Address", placeholder="Enter your email address")
+            submitted = st.form_submit_button("Login")
+            
+            if submitted:
+                if email.lower().strip() in [e.lower().strip() for e in allowed_emails]:
+                    st.session_state.authenticated = True
+                    st.session_state.user_email = email
+                    st.success(f"Welcome, {email}!")
+                    st.rerun()
+                else:
+                    st.error(" Access denied. This email is not authorized to use this application.")
+                    st.info("If you believe you should have access, please contact the administrator.")
+        
+        st.stop()
+    
+    # Show user info
+    if 'user_email' in st.session_state:
+        st.sidebar.markdown("---")
+        st.sidebar.markdown(f"** Logged in as:** {st.session_state.user_email}")
+        if st.sidebar.button(" Logout"):
+            if 'authenticated' in st.session_state:
+                del st.session_state.authenticated
+            if 'user_email' in st.session_state:
+                del st.session_state.user_email
+            st.rerun()
+    
+    return None  # No auth object needed for minimal implementation 
