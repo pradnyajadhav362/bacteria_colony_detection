@@ -33,7 +33,7 @@ class ColonyAnalyzer:
                  color_n_clusters=None,
                  color_random_state=42,
                  color_n_init=10,
-                 n_top_colonies=20,
+                 n_top_colonies=50,  # Always select more colonies than needed for display flexibility
                  penalty_factor=0.5):
         self.bilateral_d = bilateral_d
         self.bilateral_sigma_color = bilateral_sigma_color

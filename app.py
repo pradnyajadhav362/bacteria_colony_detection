@@ -88,8 +88,8 @@ def main():
         st.header(" Top Colonies & Scoring")
         st.caption("Select and rank the most interesting colonies")
         
-        n_top_colonies = st.slider("Number of top colonies to display", 5, 50, 20,
-                                  help="How many highest-scoring colonies to show")
+        n_top_colonies = st.slider("Number of top colonies to analyze", 5, 50, 20,
+                                  help="How many highest-scoring colonies to select during analysis")
         penalty_factor = st.slider("Penalty factor for diversity", 0.0, 1.0, 0.5,
                                   help="Reduce score for similar colonies (higher = more diverse selection)")
         
@@ -136,23 +136,24 @@ def main():
             uploaded_file = st.session_state.uploaded_file
             params = st.session_state.get('params', {})
             
+            # Get current slider values for display (these can change without re-running analysis)
+            current_n_top_colonies = st.slider("Number of top colonies to display", 1, 50, 20,
+                                              help="How many highest-scoring colonies to show (can be changed without re-running analysis)")
+            
             # save uploaded file temporarily
             with open("temp_image.jpg", "wb") as f:
                 f.write(uploaded_file.getbuffer())
             
             # run analysis
             with st.spinner(" Analyzing bacterial colonies..."):
-                st.write(f"Debug: n_top_colonies parameter = {params.get('n_top_colonies', 'NOT FOUND')}")
                 analyzer = ColonyAnalyzer(**params)
                 results = analyzer.run_full_analysis("temp_image.jpg")
                 # add binary mask to results
                 if hasattr(analyzer, 'final_binary_mask'):
                     results['final_binary_mask'] = analyzer.final_binary_mask
-                st.write(f"Debug: Number of top colonies in results = {len(results['top_colonies']) if 'top_colonies' in results else 'NOT FOUND'}")
             
             if results is not None:
-                st.write(f"Debug: Calling display_results with n_top_colonies = {params.get('n_top_colonies', 20)}")
-                display_results(results, params.get('n_top_colonies', 20))
+                display_results(results, current_n_top_colonies)
             else:
                 st.error(" Analysis failed. Please check your image and try again.")
             
@@ -463,10 +464,10 @@ def display_morphology_analysis(results):
 
 def display_top_colonies(results, n_top_colonies):
     # display top-scoring colonies with visualizations
-    st.write(f"Debug: display_top_colonies called with n_top_colonies = {n_top_colonies}")
     st.header(f" Top {n_top_colonies} Colonies")
     
     if 'top_colonies' in results and not results['top_colonies'].empty:
+        # Use the current slider value to limit display, not the backend selection
         top_df = results['top_colonies'].head(n_top_colonies)
         
         # top colonies table
