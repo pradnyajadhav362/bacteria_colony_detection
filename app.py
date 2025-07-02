@@ -130,8 +130,20 @@ def main():
                 st.session_state.run_analysis = True
                 st.session_state.uploaded_file = uploaded_file
                 st.session_state.params = current_params
+                # Clear cached results to force re-analysis
+                if 'analysis_results' in st.session_state:
+                    del st.session_state.analysis_results
             else:
                 st.error("Please upload an image first!")
+        
+        # Add a button to re-run analysis with current parameters
+        if 'run_analysis' in st.session_state and st.session_state.run_analysis:
+            if st.button(" Update Display", type="secondary"):
+                # Update parameters and clear cache
+                st.session_state.params = current_params
+                if 'analysis_results' in st.session_state:
+                    del st.session_state.analysis_results
+                st.rerun()
     
     # main content area
     if 'run_analysis' in st.session_state and st.session_state.run_analysis:
@@ -139,23 +151,19 @@ def main():
             uploaded_file = st.session_state.uploaded_file
             stored_params = st.session_state.get('params', {})
             
-            # Get current slider value from sidebar (reactive)
-            current_n_top_colonies = st.sidebar.slider("Number of top colonies to display", 1, 50, 20,
-                                                      help="How many highest-scoring colonies to show")
-            
-            # Check if parameters have changed (specifically n_top_colonies)
-            params_changed = (stored_params.get('n_top_colonies', 20) != current_n_top_colonies)
+            # Check if parameters have changed by comparing with current sidebar value
+            # We need to get the current value from the sidebar without creating a duplicate slider
+            current_n_top_colonies = stored_params.get('n_top_colonies', 20)
             
             # Update stored params with current slider value
             params = stored_params.copy()
-            params['n_top_colonies'] = current_n_top_colonies
             
             # save uploaded file temporarily
             with open("temp_image.jpg", "wb") as f:
                 f.write(uploaded_file.getbuffer())
             
             # Check if we need to re-run analysis or use cached results
-            if params_changed or 'analysis_results' not in st.session_state:
+            if 'analysis_results' not in st.session_state:
                 # run analysis
                 with st.spinner(" Analyzing bacterial colonies..."):
                     analyzer = ColonyAnalyzer(**params)
@@ -171,7 +179,7 @@ def main():
                 results = st.session_state.analysis_results
             
             if results is not None:
-                display_results(results, current_n_top_colonies)
+                display_results(results, params.get('n_top_colonies', 20))
             else:
                 st.error(" Analysis failed. Please check your image and try again.")
             
