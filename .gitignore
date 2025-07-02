@@ -1,6 +1,9 @@
 # Local files folder - contains reference materials not meant for GitHub
 local_files/
 
+# Streamlit secrets and configuration - contains sensitive data
+.streamlit/
+
 # Python cache files
 __pycache__/
 *.pyc
