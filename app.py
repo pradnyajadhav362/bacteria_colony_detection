@@ -228,7 +228,7 @@ def display_results(results, n_top_colonies):
         display_top_colonies(results, n_top_colonies)
     
     with tab6:
-        display_binary_mask(results)
+        display_binary_mask(results, n_top_colonies)
 
 def display_overview(results):
     # display overview statistics and key metrics
@@ -595,7 +595,7 @@ def display_top_colonies(results, n_top_colonies):
     else:
         st.warning("No top colonies data available")
 
-def display_binary_mask(results):
+def display_binary_mask(results, n_top_colonies):
     st.header(" Final Binary Mask (Colonies)")
     if 'final_binary_mask' in results and results['final_binary_mask'] is not None:
         st.image(results['final_binary_mask'], caption="Final binary mask (colonies=white)")
@@ -617,14 +617,14 @@ def display_binary_mask(results):
         if 'top_colonies' in results and not results['top_colonies'].empty:
             st.subheader(" Zoomed Views of Top Colonies")
             
-            n_top_colonies = len(results['top_colonies']) if len(results['top_colonies']) < 5 else 5
-            if 'n_top_colonies' in results:
-                n_top_colonies = results['n_top_colonies']
-            top_colonies = results['top_colonies'].head(n_top_colonies)
+            # Use the n_top_colonies parameter passed to the function
+            # Get the actual number of colonies to display (don't cap at 5)
+            actual_n_top = min(n_top_colonies, len(results['top_colonies']))
+            top_colonies = results['top_colonies'].head(actual_n_top)
             zoom_size = 100  # pixels around colony
             
             # Create columns for zoomed views
-            cols = st.columns(n_top_colonies)
+            cols = st.columns(actual_n_top)
             
             for idx, (col_idx, row) in enumerate(zip(cols, top_colonies.iterrows())):
                 colony_id = row[1]['colony_id']
