@@ -501,30 +501,96 @@ def display_top_colonies(results, n_top_colonies):
         st.subheader(" Top Colonies Visualization")
         
         if 'processed_image' in results and 'colony_properties' in results:
-            marked_image = results['processed_image'].copy()
-            colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255)]
+            # Original vs marked image comparison
+            col1, col2 = st.columns(2)
             
-            for idx, row in top_df.iterrows():
-                colony_id = row['colony_id']
+            with col1:
+                st.markdown("**Original Image**")
+                st.image(results['processed_image'], caption="Original processed image")
+            
+            with col2:
+                st.markdown("**Top Colonies Highlighted**")
+                marked_image = results['processed_image'].copy()
+                colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255)]
+                
+                for idx, row in top_df.iterrows():
+                    colony_id = row['colony_id']
+                    rank = idx + 1
+                    color = colors[idx % len(colors)]
+                    
+                    prop = results['colony_properties'][colony_id]
+                    colony_mask = (results['colony_labels'] == prop.label).astype(np.uint8)
+                    contours, _ = cv2.findContours(colony_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    
+                    if contours:
+                        cv2.drawContours(marked_image, contours, -1, color, thickness=6)
+                        
+                        y_center, x_center = prop.centroid
+                        center_point = (int(x_center), int(y_center))
+                        cv2.circle(marked_image, center_point, 25, (255, 255, 255), -1)
+                        cv2.circle(marked_image, center_point, 25, color, 3)
+                        cv2.putText(marked_image, str(rank),
+                                   (int(x_center-10), int(y_center+8)),
+                                   cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 0), 3)
+                
+                st.image(marked_image, caption="Top colonies highlighted with rankings")
+            
+            # Individual zoomed views of top colonies
+            st.subheader(" Zoomed Views of Top Colonies")
+            
+            zoom_size = 100  # pixels around colony
+            
+            # Create columns for zoomed views
+            cols = st.columns(5)
+            
+            for idx, (col_idx, row) in enumerate(zip(cols, top_df.iterrows())):
+                colony_id = row[1]['colony_id']
                 rank = idx + 1
                 color = colors[idx % len(colors)]
                 
                 prop = results['colony_properties'][colony_id]
-                colony_mask = (results['colony_labels'] == prop.label).astype(np.uint8)
-                contours, _ = cv2.findContours(colony_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                y_center, x_center = prop.centroid
                 
-                if contours:
-                    cv2.drawContours(marked_image, contours, -1, color, thickness=6)
+                # Calculate zoom boundaries
+                y_min = max(0, int(y_center - zoom_size))
+                y_max = min(results['processed_image'].shape[0], int(y_center + zoom_size))
+                x_min = max(0, int(x_center - zoom_size))
+                x_max = min(results['processed_image'].shape[1], int(x_center + zoom_size))
+                
+                # Extract zoomed region
+                zoomed_region = results['processed_image'][y_min:y_max, x_min:x_max].copy()
+                zoomed_labels = results['colony_labels'][y_min:y_max, x_min:x_max]
+                
+                # Mark the specific colony in zoom
+                colony_mask_zoom = (zoomed_labels == prop.label).astype(np.uint8)
+                contours_zoom, _ = cv2.findContours(colony_mask_zoom, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                
+                if contours_zoom:
+                    # Thick outline on zoomed view
+                    cv2.drawContours(zoomed_region, contours_zoom, -1, color, thickness=4)
                     
-                    y_center, x_center = prop.centroid
-                    center_point = (int(x_center), int(y_center))
-                    cv2.circle(marked_image, center_point, 25, (255, 255, 255), -1)
-                    cv2.circle(marked_image, center_point, 25, color, 3)
-                    cv2.putText(marked_image, str(rank),
-                               (int(x_center-10), int(y_center+8)),
-                               cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 0), 3)
-            
-            st.image(marked_image, caption="Top colonies highlighted with rankings")
+                    # Crosshairs at center
+                    center_y_zoom = int(y_center - y_min)
+                    center_x_zoom = int(x_center - x_min)
+                    
+                    # Draw crosshairs
+                    cv2.line(zoomed_region, (center_x_zoom-30, center_y_zoom),
+                            (center_x_zoom+30, center_y_zoom), color, 3)
+                    cv2.line(zoomed_region, (center_x_zoom, center_y_zoom-30),
+                            (center_x_zoom, center_y_zoom+30), color, 3)
+                    
+                    cv2.circle(zoomed_region, (center_x_zoom, center_y_zoom), 8, (255, 255, 255), -1)
+                    cv2.circle(zoomed_region, (center_x_zoom, center_y_zoom), 8, color, 2)
+                
+                # Display zoomed view
+                with col_idx:
+                    st.image(zoomed_region, caption=f"Colony #{rank}")
+                    
+                    # Title with key info
+                    score = row[1]['bio_interest']
+                    form = row[1].get('form', 'unknown')
+                    st.caption(f"Score: {score:.2f}")
+                    st.caption(f"Form: {form}")
     
     else:
         st.warning("No top colonies data available")
