@@ -1,7 +1,13 @@
+[global]
+# Global configuration for Streamlit app
+
 [server]
+# Server configuration
 headless = true
+port = 8501
 enableCORS = false
 enableXsrfProtection = false
 
 [browser]
+# Browser configuration
 gatherUsageStats = false 
