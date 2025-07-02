@@ -31,12 +31,12 @@ def main():
     
     # sidebar for parameters
     with st.sidebar:
-        st.header("📁 Upload Image")
+        st.header("Upload Image")
         uploaded_file = st.file_uploader("Choose a petri dish image", 
                                         type=['png', 'jpg', 'jpeg'],
                                         help="Upload a high-resolution image of a petri dish")
         
-        st.header("⚙️ Analysis Parameters")
+        st.header("Analysis Parameters")
         st.caption("Adjust image processing settings")
         
         bilateral_d = st.slider("Bilateral filter diameter", 3, 21, 9, step=2, 
@@ -54,7 +54,7 @@ def main():
         sharpen_strength = st.slider("Sharpen strength", 0.0, 2.0, 1.0,
                                     help="Edge sharpening intensity (0 = no sharpening)")
         
-        st.header("🔍 Colony Detection")
+        st.header("Colony Detection")
         st.caption("Configure colony segmentation parameters")
         
         margin_percent = st.slider("Plate margin percent", 0.05, 0.20, 0.08, 0.01,
@@ -73,7 +73,7 @@ def main():
         watershed_threshold = st.slider("Watershed threshold", 0.1, 0.5, 0.3, 0.05,
                                        help="Threshold for watershed peak detection")
         
-        st.header("🎨 Color Analysis")
+        st.header("Color Analysis")
         st.caption("Configure color clustering parameters")
         
         color_n_clusters = st.number_input("Number of color clusters (0=auto)", 0, 10, 0,
@@ -83,7 +83,7 @@ def main():
         color_n_init = st.slider("KMeans n_init", 1, 20, 10,
                                 help="Number of times to run K-means with different seeds")
         
-        st.header(" Top Colonies & Scoring")
+        st.header("Top Colonies & Scoring")
         st.caption("Select and rank the most interesting colonies")
         
         n_top_colonies = st.slider("Number of top colonies to display", 1, 50, 20,
@@ -91,7 +91,7 @@ def main():
         penalty_factor = st.slider("Penalty factor for diversity", 0.0, 1.0, 0.5,
                                   help="Reduce score for similar colonies (higher = more diverse selection)")
         
-        st.header(" Analysis Options")
+        st.header("Analysis Options")
         st.caption("Choose which analyses to run")
         
         run_morphology = st.checkbox("Analyze morphology", value=True,
