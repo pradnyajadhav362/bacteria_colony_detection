@@ -148,20 +148,19 @@ def main():
         # Add comprehensive guide section
         st.header("User Guide")
         
-        # Button to auto-expand guide
+        # Button to show guide directly in sidebar
         if st.button("Use Guide", help="Click to open the complete package guide"):
-            st.session_state.guide_expanded = True
+            st.session_state.show_guide = True
         
-        # Guide expander with session state control
-        guide_expanded = st.session_state.get('guide_expanded', False)
-        with st.expander("Complete Package Guide", expanded=guide_expanded):
+        # Show guide directly in sidebar if activated
+        if st.session_state.get('show_guide', False):
             # Close button at top of guide
             if st.button("Close Guide", key="close_guide"):
-                st.session_state.guide_expanded = False
+                st.session_state.show_guide = False
                 st.rerun()
             
             st.markdown("""
-            ### Bacterial Colony Detection: Image Analysis Pipeline
+            #### Bacterial Colony Detection: Image Analysis Pipeline
             
             Bacterial colony counting and characterization is a fundamental task in microbiology. Manual analysis of petri dish images is time-consuming and prone to error, especially when dealing with large datasets or high-throughput experiments. This app provides a complete, 12-step workflow for analyzing photographs of petri dishes with bacterial colonies.
             
