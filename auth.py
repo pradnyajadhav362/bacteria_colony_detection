@@ -131,9 +131,6 @@ def authenticate():
         with tab1:
             st.write("Sign in with your Google account")
             
-            # simple mock google signin that doesn't need oauth
-            st.info("Simplified Google sign-in (no OAuth setup required)")
-            
             with st.form("google_login_form"):
                 google_email = st.text_input("Google email:", placeholder="")
                 google_submit = st.form_submit_button("Continue with Google", type="primary")
