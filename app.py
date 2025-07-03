@@ -147,7 +147,19 @@ def main():
         
         # Add comprehensive guide section
         st.header("User Guide")
-        with st.expander("Complete Package Guide", expanded=False):
+        
+        # Button to auto-expand guide
+        if st.button("Use Guide", help="Click to open the complete package guide"):
+            st.session_state.guide_expanded = True
+        
+        # Guide expander with session state control
+        guide_expanded = st.session_state.get('guide_expanded', False)
+        with st.expander("Complete Package Guide", expanded=guide_expanded):
+            # Close button at top of guide
+            if st.button("Close Guide", key="close_guide"):
+                st.session_state.guide_expanded = False
+                st.rerun()
+            
             st.markdown("""
             ### Bacterial Colony Detection: Image Analysis Pipeline
             
