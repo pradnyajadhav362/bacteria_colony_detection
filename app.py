@@ -109,13 +109,13 @@ def main():
         max_colony_size = st.slider("Max colony size", 5000, 20000, 10000,
                                    help="Maximum area in pixels for a colony to be considered valid")
         adaptive_block_size = st.slider("Adaptive threshold block size", 11, 25, 15, step=2,
-                                       help="Block size for adaptive thresholding (must be odd)")
+                                       help="Higher = smoother detection (less noise), Lower = more detailed detection (captures small features)")
         adaptive_c = st.slider("Adaptive threshold C", 1, 10, 3,
-                              help="Constant subtracted from mean for adaptive thresholding")
+                              help="Higher = detects fewer colonies (stricter), Lower = detects more colonies (more sensitive)")
         watershed_min_distance = st.slider("Watershed min distance", 5, 15, 8,
-                                          help="Minimum distance between colony centers for watershed")
+                                          help="Higher = merges touching colonies together, Lower = separates colonies more aggressively")
         watershed_threshold = st.slider("Watershed threshold", 0.1, 0.5, 0.3, 0.05,
-                                       help="Threshold for watershed peak detection")
+                                       help="Higher = detects fewer peaks (stricter separation), Lower = detects more peaks (more separation)")
         
         st.header("Color Analysis")
         st.caption("Configure color clustering parameters")
@@ -133,7 +133,7 @@ def main():
         n_top_colonies = st.slider("Number of top colonies to display", 1, 50, 20,
                                   help="How many highest-scoring colonies to show")
         penalty_factor = st.slider("Penalty factor for diversity", 0.0, 1.0, 0.5,
-                                  help="Reduce score for similar colonies (higher = more diverse selection)")
+                                  help="Higher = more diverse top colonies (avoids similar ones), Lower = shows highest scores regardless of similarity")
         
         st.header("Analysis Options")
         st.caption("Choose which analyses to run")
