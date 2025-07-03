@@ -32,9 +32,20 @@ def main():
     # sidebar for parameters
     with st.sidebar:
         st.header("Upload Image")
-        uploaded_file = st.file_uploader("Choose a petri dish image", 
+        
+        # Create a more intuitive upload interface
+        st.markdown("**📁 Choose your petri dish image:**")
+        uploaded_file = st.file_uploader("Click to upload image", 
                                         type=['png', 'jpg', 'jpeg'],
-                                        help="Upload a high-resolution image of a petri dish")
+                                        help="Select a petri dish image from your computer")
+        
+        if uploaded_file is not None:
+            st.success(f"✓ Image loaded: {uploaded_file.name}")
+            # Show image preview
+            image = Image.open(uploaded_file)
+            st.image(image, caption="Preview", width=200)
+        else:
+            st.warning("Please upload an image to begin analysis")
         
         st.header("Analysis Parameters")
         st.caption("Adjust image processing settings")
