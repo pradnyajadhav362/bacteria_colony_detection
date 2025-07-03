@@ -91,11 +91,31 @@ def main():
         else:  # Multi-Image Comparison mode
             st.header("Upload Multiple Images")
             
-            uploaded_files = st.file_uploader(
-                "Select up to 100 images", 
-                type=['png', 'jpg', 'jpeg'],
-                accept_multiple_files=True
+            # Upload method selection
+            upload_method = st.radio(
+                "Choose upload method:",
+                ["Select Individual Files", "Upload Folder (Drag & Drop)"],
+                horizontal=True
             )
+            
+            if upload_method == "Select Individual Files":
+                uploaded_files = st.file_uploader(
+                    "Select up to 100 images", 
+                    type=['png', 'jpg', 'jpeg'],
+                    accept_multiple_files=True
+                )
+            else:
+                st.info("📁 **Folder Upload Instructions:**\n"
+                       "1. Create a folder with your images (PNG, JPG, JPEG)\n"
+                       "2. Drag the entire folder to the upload area below\n"
+                       "3. All images in the folder will be processed automatically")
+                
+                uploaded_files = st.file_uploader(
+                    "Drag folder here or click to browse", 
+                    type=['png', 'jpg', 'jpeg'],
+                    accept_multiple_files=True,
+                    help="You can drag a folder containing images directly to this area"
+                )
             
             if uploaded_files:
                 if len(uploaded_files) > 100:
@@ -104,15 +124,44 @@ def main():
                 
                 st.success(f"✓ {len(uploaded_files)} images uploaded")
                 
-                # Sample labeling interface
-                st.subheader("Label Samples")
+                # Auto-generate labels or allow custom labeling
+                label_method = st.radio(
+                    "Sample labeling method:",
+                    ["Auto-generate from filenames", "Custom labels"],
+                    horizontal=True
+                )
+                
                 sample_labels = {}
-                for i, file in enumerate(uploaded_files):
-                    sample_labels[file.name] = st.text_input(
-                        f"Label for {file.name[:20]}...", 
-                        value=f"Sample_{i+1}",
-                        key=f"label_{i}"
-                    )
+                if label_method == "Auto-generate from filenames":
+                    for file in uploaded_files:
+                        # Use filename without extension as label
+                        clean_name = file.name.rsplit('.', 1)[0]
+                        sample_labels[file.name] = clean_name
+                    
+                    st.write("**Auto-generated labels:**")
+                    for file in uploaded_files[:5]:  # Show first 5
+                        st.write(f"• {file.name} → {sample_labels[file.name]}")
+                    if len(uploaded_files) > 5:
+                        st.write(f"... and {len(uploaded_files) - 5} more")
+                
+                else:  # Custom labels
+                    st.subheader("Custom Sample Labels")
+                    
+                    # Bulk labeling options
+                    with st.expander("Bulk Labeling Options"):
+                        bulk_prefix = st.text_input("Common prefix for all samples:", value="Sample")
+                        if st.button("Apply bulk prefix"):
+                            for i, file in enumerate(uploaded_files):
+                                st.session_state[f"label_{i}"] = f"{bulk_prefix}_{i+1}"
+                            st.rerun()
+                    
+                    # Individual labels
+                    for i, file in enumerate(uploaded_files):
+                        sample_labels[file.name] = st.text_input(
+                            f"Label for {file.name[:20]}...", 
+                            value=f"Sample_{i+1}",
+                            key=f"label_{i}"
+                        )
         
         st.header("Analysis Parameters")
         st.caption("Adjust image processing settings")
