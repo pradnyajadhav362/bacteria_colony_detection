@@ -32,28 +32,9 @@ def main():
     # sidebar for parameters
     with st.sidebar:
         st.header("Upload Image")
-        st.info("Upload a petri dish image (PNG, JPG, or JPEG only)")
-        
-        with st.expander("📁 File Upload Tips"):
-            st.write("• Navigate to your images folder")
-            st.write("• Avoid temporary or system folders")
-            st.write("• Select high-resolution petri dish photos")
-            st.write("• Supported formats: PNG, JPG, JPEG")
-            st.write("• Maximum file size: 50MB")
-        
         uploaded_file = st.file_uploader("Choose a petri dish image", 
                                         type=['png', 'jpg', 'jpeg'],
-                                        help="Select a high-resolution image of a petri dish with bacterial colonies",
-                                        accept_multiple_files=False)
-        
-        if uploaded_file is not None:
-            # Validate file size (optional)
-            file_size = len(uploaded_file.getvalue())
-            if file_size > 50 * 1024 * 1024:  # 50MB limit
-                st.error("File too large. Please upload an image smaller than 50MB")
-                uploaded_file = None
-            else:
-                st.success(f"File uploaded: {uploaded_file.name} ({file_size/1024/1024:.1f}MB)")
+                                        help="Upload a high-resolution image of a petri dish")
         
         st.header("Analysis Parameters")
         st.caption("Adjust image processing settings")
