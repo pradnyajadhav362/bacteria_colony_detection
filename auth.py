@@ -106,8 +106,8 @@ def authenticate():
                         st.error("Please enter a valid Google email address")
         
         with tab2:
-            st.write("Enter any email address to access the app")
-            st.write("We track usage for analytics but all emails are welcome")
+            st.write("Enter any email address to access the app.")
+            #st.write("We track usage for analytics but all emails are welcome")
             
             # simple email form
             with st.form("login_form"):
@@ -138,13 +138,13 @@ def show_user_info():
     # display current user info and admin stats
     if 'user_email' in st.session_state:
         st.sidebar.markdown("---")
-        st.sidebar.markdown(f"**logged in as:** {st.session_state.get('user_name', 'user')}")
-        st.sidebar.markdown(f"**email:** {st.session_state.user_email}")
+        st.sidebar.markdown(f"**Logged in as:** {st.session_state.get('user_name', 'user')}")
+        st.sidebar.markdown(f"**Email:** {st.session_state.user_email}")
         
         # show admin stats if user email matches certain pattern
         if st.session_state.user_email == "prjadhav@andrew.cmu.edu":
             st.sidebar.markdown("---")
-            st.sidebar.markdown("**admin panel:**")
+            st.sidebar.markdown("**Admin panel:**")
             stats = get_user_stats()
             
             # detailed stats for admin
@@ -152,7 +152,7 @@ def show_user_info():
             st.sidebar.metric("unique users", stats['unique_users'])
             
             if stats["recent_users"]:
-                st.sidebar.markdown("**recent users:**")
+                st.sidebar.markdown("**Recent users:**")
                 for user in stats["recent_users"][-3:]:  # show last 3 users
                     st.sidebar.write(f"• {user}")
             
