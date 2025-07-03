@@ -46,6 +46,16 @@ st.markdown("""
     font-weight: 500 !important;
     color: #1f77b4 !important;
 }
+
+/* Hide the browse files button */
+.stFileUploader > div > div > div > div > button {
+    display: none !important;
+}
+
+/* Make the entire drop zone clickable */
+.stFileUploader > div > div > div {
+    cursor: pointer !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
