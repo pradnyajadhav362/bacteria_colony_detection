@@ -184,14 +184,7 @@ def main():
             else:
                 st.error("Please upload an image first!")
         
-        # Add a button to re-run analysis with current parameters
-        if 'run_analysis' in st.session_state and st.session_state.run_analysis:
-            if st.button(" Update Display", type="secondary"):
-                # Update parameters and clear cache
-                st.session_state.params = current_params
-                if 'analysis_results' in st.session_state:
-                    del st.session_state.analysis_results
-                st.rerun()
+
     
     # Create main layout with guide on right if activated
     if st.session_state.get('show_guide', False):
