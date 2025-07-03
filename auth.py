@@ -3,52 +3,8 @@
 
 import streamlit as st
 import os
-from typing import List
 import json
 from datetime import datetime
-
-def get_allowed_emails() -> List[str]:
-    # get list of allowed email addresses
-    # priority 1: streamlit secrets
-    # priority 2: environment variable  
-    # priority 3: local file
-    
-    # option 1: read from streamlit secrets
-    try:
-        if hasattr(st, 'secrets') and st.secrets:
-            allowed_emails = st.secrets.get("auth", {}).get("allowed_emails", [])
-            if allowed_emails:
-                return allowed_emails
-    except Exception:
-        pass
-    
-    # option 2: read from environment variable
-    emails_str = os.getenv("ALLOWED_EMAILS", "")
-    if emails_str:
-        allowed_emails = []
-        for email in emails_str.split(","):
-            email = email.strip()
-            if email and "@" in email:
-                allowed_emails.append(email)
-        if allowed_emails:
-            return allowed_emails
-    
-    # option 3: read from local file
-    try:
-        with open("local_files/allowed_emails.txt", "r") as f:
-            allowed_emails = []
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#"):
-                    allowed_emails.append(line)
-            if allowed_emails:
-                return allowed_emails
-    except FileNotFoundError:
-        pass
-    
-    return []
-
-
 
 def log_user_access(email: str, name: str = ""):
     # log user access to local file for tracking
@@ -109,15 +65,11 @@ def get_user_stats():
     
     return {"total_logins": 0, "unique_users": 0, "recent_users": []}
 
-
-
 def authenticate():
     # simple email authentication that accepts any email
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
         st.session_state.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-
 
     if not st.session_state.authenticated:
         st.title("Bacterial Colony Analyzer")
