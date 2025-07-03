@@ -121,7 +121,7 @@ def authenticate():
 
     if not st.session_state.authenticated:
         st.title("Bacterial Colony Analyzer")
-        st.write("Choose how to sign in:")
+        st.write("Choose how to sign in")
         
         st.markdown("---")
         
@@ -135,12 +135,7 @@ def authenticate():
             st.info("Simplified Google sign-in (no OAuth setup required)")
             
             with st.form("google_login_form"):
-                col1, col2 = st.columns([1, 3])
-                with col1:
-                    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png", width=60)
-                with col2:
-                    google_email = st.text_input("Google email:", placeholder="yourname@gmail.com")
-                
+                google_email = st.text_input("Google email:", placeholder="")
                 google_submit = st.form_submit_button("Continue with Google", type="primary")
                 
                 if google_submit:
@@ -156,7 +151,7 @@ def authenticate():
                         st.session_state.user_email = google_email
                         st.session_state.user_name = f"{name} (Google)"
                         
-                        st.success(f"Welcome back, {name}!")
+                        st.success(f"Welcome back, {name}")
                         st.rerun()
                     else:
                         st.error("Please enter a valid Google email address")
@@ -167,8 +162,8 @@ def authenticate():
             
             # simple email form
             with st.form("login_form"):
-                email = st.text_input("Your email address:", placeholder="name@company.com")
-                name = st.text_input("Your name (optional):", placeholder="John Doe")
+                email = st.text_input("Your email address:", placeholder="")
+                name = st.text_input("Your name (optional):", placeholder="")
                 submitted = st.form_submit_button("Enter App")
                 
                 if submitted:
@@ -181,7 +176,7 @@ def authenticate():
                         st.session_state.user_email = email
                         st.session_state.user_name = name or email.split("@")[0]
                         
-                        st.success(f"Welcome, {st.session_state.user_name}!")
+                        st.success(f"Welcome, {st.session_state.user_name}")
                         st.rerun()
                     else:
                         st.error("Please enter a valid email address")
