@@ -123,19 +123,6 @@ def authenticate():
         st.title("bacterial colony analyzer")
         st.write("choose how to sign in:")
         
-        # show usage stats
-        stats = get_user_stats()
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("total logins", stats["total_logins"])
-        with col2:
-            st.metric("unique users", stats["unique_users"])
-        with col3:
-            if stats["recent_users"]:
-                st.write("recent users:")
-                for user in stats["recent_users"]:
-                    st.write(f"• {user}")
-        
         st.markdown("---")
         
         # login options tabs
@@ -215,8 +202,15 @@ def show_user_info():
             st.sidebar.markdown("---")
             st.sidebar.markdown("**admin panel:**")
             stats = get_user_stats()
-            st.sidebar.write(f"total logins: {stats['total_logins']}")
-            st.sidebar.write(f"unique users: {stats['unique_users']}")
+            
+            # detailed stats for admin
+            st.sidebar.metric("total logins", stats['total_logins'])
+            st.sidebar.metric("unique users", stats['unique_users'])
+            
+            if stats["recent_users"]:
+                st.sidebar.markdown("**recent users:**")
+                for user in stats["recent_users"][-3:]:  # show last 3 users
+                    st.sidebar.write(f"• {user}")
             
             if st.sidebar.button("view full log"):
                 st.sidebar.write("check local_files/user_access_log.json")
