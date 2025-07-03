@@ -191,16 +191,16 @@ def main():
             Shows the loaded photograph and prints basic properties (dimensions, color channels) so you can confirm it loaded correctly
             
             #### **Section 4: Image Preprocessing**
-            - **bilateral filtering** - denoise while keeping edges sharp using cv2.bilateralFilter with diameter=9, sigmaColor=75, sigmaSpace=75
-            - **CLAHE enhancement** - enhances local contrast using cv2.createCLAHE with clipLimit=3.0, tileGridSize=(8,8)
-            - **gamma correction** - adjusts brightness for optimal detection using gamma=1.2 
-            - **sharpening** - enhances colony boundaries using convolution kernel [[-1,-1,-1],[-1,9,-1],[-1,-1,-1]]
+            - **bilateral filtering** - Denoise while keeping edges sharp using cv2.bilateralFilter with diameter=9, sigmaColor=75, sigmaSpace=75
+            - **CLAHE enhancement** - Enhances local contrast using cv2.createCLAHE with clipLimit=3.0, tileGridSize=(8,8)
+            - **gamma correction** - Adjusts brightness for optimal detection using gamma=1.2 
+            - **sharpening** - Enhances colony boundaries using convolution kernel [[-1,-1,-1],[-1,9,-1],[-1,-1,-1]]
             
             #### **Section 5: Plate Detection**
-            - locates the inner region of the petri dish and creates a binary mask of the plate area
-            - creates inner margin to exclude plate edges (8% margin from edges)
-            - uses otsu's thresholding and contour analysis to refine the region
-            - finds largest contour in inner area and combines with inner margin for final mask
+            - Locates the inner region of the petri dish and creates a binary mask of the plate area
+            - Creates inner margin to exclude plate edges (8% margin from edges)
+            - Uses otsu's thresholding and contour analysis to refine the region
+            - Finds largest contour in inner area and combines with inner margin for final mask
             
             #### **Section 6: Colony Segmentation**
             - **adaptive thresholding** - separates colonies from background using cv2.adaptiveThreshold with ADAPTIVE_THRESH_GAUSSIAN_C
@@ -220,41 +220,41 @@ def main():
             
             #### **Section 8: Color Analysis**
             Extracts each colony's dominant hue, converts to lab color space, and groups similar-looking colonies:
-            - **dominant color extraction** - finds main color using k-means clustering within each colony
-            - **RGB to LAB conversion** - uses perceptually uniform color space for better comparison
-            - **k-means clustering** - groups colonies with similar colors using sklearn.KMeans
-            - **elbow method** - automatically determines optimal number of color groups by analyzing inertia curves
-            - **color visualization** - draws contours in distinct colors to show each group
+            - **dominant color extraction** - Finds main color using k-means clustering within each colony
+            - **RGB to LAB conversion** - Uses perceptually uniform color space for better comparison
+            - **k-means clustering** - Groups colonies with similar colors using sklearn.KMeans
+            - **elbow method** - Automatically determines optimal number of color groups by analyzing inertia curves
+            - **color visualization** - Draws contours in distinct colors to show each group
             
             #### **Section 9: Density Analysis**
             Quantifies brightness, texture, and saturation metrics to classify how "dense" or "translucent" each colony appears:
-            - **opacity scoring** - measures how different colony is from background using abs(mean_intensity - background_mean)/background_std
-            - **texture analysis** - quantifies surface roughness using local variance filters
-            - **density gradient** - compares center vs edge density using distance transforms
-            - **density classification** - categories from very_sparse to very_dense based on opacity thresholds
-            - **saturation analysis** - measures color intensity using hsv color space
+            - **opacity scoring** - Measures how different colony is from background using abs(mean_intensity - background_mean)/background_std
+            - **texture analysis** - Quantifies surface roughness using local variance filters
+            - **density gradient** - Compares center vs edge density using distance transforms
+            - **density classification** - Categories from very_sparse to very_dense based on opacity thresholds
+            - **saturation analysis** - Measures color intensity using hsv color space
             
             #### **Section 10: Combined Scoring**
             Merges shape, color, and density features into a single "interest" score, highlighting the most distinctive colonies:
-            - **morphology scores** - rewards interesting shapes using percentile-based metrics
-            - **form rarity** - prioritizes uncommon colony types by calculating frequency-based scores
-            - **size preferences** - favors medium-sized colonies using logarithmic ranking
-            - **density bonuses** - rewards high-density colonies with enhanced weighting
-            - **novelty combinations** - finds unique feature combinations and rare form-color pairs
-            - **diversity penalties** - reduces scores for too-similar colonies to encourage variety
+            - **morphology scores** - Rewards interesting shapes using percentile-based metrics
+            - **form rarity** - Prioritizes uncommon colony types by calculating frequency-based scores
+            - **size preferences** - Favors medium-sized colonies using logarithmic ranking
+            - **density bonuses** - Rewards high-density colonies with enhanced weighting
+            - **novelty combinations** - Finds unique feature combinations and rare form-color pairs
+            - **diversity penalties** - Reduces scores for too-similar colonies to encourage variety
             
             #### **Section 11: Top Colony Visualization**
             Draws colored outlines around the highest-scoring colonies on the full dish and zooms in on each:
-            - highlights top 5 colonies on full image with colored outlines and rank labels
-            - displays original and marked images side by side for context
-            - extracts zoomed regions around each top colony center (100 pixel radius)
-            - adds crosshairs and detailed annotations for easy inspection
+            - Highlights top 5 colonies on full image with colored outlines and rank labels
+            - Displays original and marked images side by side for context
+            - Extracts zoomed regions around each top colony center (100 pixel radius)
+            - Adds crosshairs and detailed annotations for easy inspection
             
             #### **Section 12: Binary Mask View**
             Provides alternate view by outlining top colonies on simple black-and-white mask:
-            - creates binary image where colonies are white (255) and background is black (0)
-            - outlines top colonies with colored contours and measurement grids
-            - shows side-by-side views for precise sizing and validation
+            - Creates binary image where colonies are white (255) and background is black (0)
+            - Outlines top colonies with colored contours and measurement grids
+            - Shows side-by-side views for precise sizing and validation
             
             ### App Results & Outputs
             
@@ -313,23 +313,23 @@ def main():
             - **display settings** - number of top colonies to show (1-50, default 20)
             
             ### Technical Implementation Notes
-            - uses reproducible random seeds (42) for consistent k-means results
-            - caches analysis results in streamlit session state for parameter adjustments
-            - processes images up to 20MB with automatic format conversion
-            - optimized for petri dish images with good contrast and lighting
-            - implements elbow method for automatic cluster detection
-            - uses lab color space for perceptually uniform color analysis
+            - Uses reproducible random seeds (42) for consistent k-means results
+            - Caches analysis results in streamlit session state for parameter adjustments
+            - Processes images up to 20MB with automatic format conversion
+            - Optimized for petri dish images with good contrast and lighting
+            - Implements elbow method for automatic cluster detection
+            - Uses lab color space for perceptually uniform color analysis
             
             ### Tips for Best Results
-            - use well-lit, high-contrast images with uniform illumination
-            - ensure colonies are clearly visible against plate background
-            - adjust bilateral filter parameters if image is very noisy
-            - increase CLAHE clip limit for low-contrast images
-            - adjust gamma correction for over/under-exposed images
-            - fine-tune size limits to exclude debris and large artifacts
-            - use color clustering when colonies have distinct pigmentation
-            - experiment with watershed parameters for touching colonies
-            - check binary mask tab to validate detection accuracy
+            - Use well-lit, high-contrast images with uniform illumination
+            - Ensure colonies are clearly visible against plate background
+            - Adjust bilateral filter parameters if image is very noisy
+            - Increase CLAHE clip limit for low-contrast images
+            - Adjust gamma correction for over/under-exposed images
+            - Fine-tune size limits to exclude debris and large artifacts
+            - Use color clustering when colonies have distinct pigmentation
+            - Experiment with watershed parameters for touching colonies
+            - Check binary mask tab to validate detection accuracy
             """)
         
         # Store current parameters in session state
