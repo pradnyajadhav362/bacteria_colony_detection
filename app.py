@@ -22,6 +22,33 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Add custom CSS to improve file uploader appearance
+st.markdown("""
+<style>
+.uploadedFile {
+    border: 2px dashed #1f77b4;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin: 10px 0;
+    background-color: #f0f2f6;
+}
+
+.stFileUploader > div > div > div > div {
+    border: 2px dashed #1f77b4 !important;
+    border-radius: 10px !important;
+    padding: 20px !important;
+    background-color: #f8f9fa !important;
+}
+
+.stFileUploader > div > div > div > div > p {
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    color: #1f77b4 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 def main():
     # Initialize authentication
     auth = init_auth()
@@ -35,6 +62,8 @@ def main():
         
         # Create a more intuitive upload interface
         st.markdown("**📁 Choose your petri dish image:**")
+        st.markdown("*Drag and drop your image here, or click to browse:*")
+        
         uploaded_file = st.file_uploader("Click to upload image", 
                                         type=['png', 'jpg', 'jpeg'],
                                         help="Select a petri dish image from your computer")
@@ -45,6 +74,7 @@ def main():
             image = Image.open(uploaded_file)
             st.image(image, caption="Preview", width=200)
         else:
+            st.info("💡 Try dragging your image file directly here")
             st.warning("Please upload an image to begin analysis")
         
         st.header("Analysis Parameters")
