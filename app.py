@@ -70,22 +70,15 @@ def main():
     with st.sidebar:
         st.header("Upload Image")
         
-        # Create a more intuitive upload interface
-        st.markdown("**📁 Choose your petri dish image:**")
-        st.markdown("*Drag and drop your image here, or click to browse:*")
-        
-        uploaded_file = st.file_uploader("Click to upload image", 
+        uploaded_file = st.file_uploader("", 
                                         type=['png', 'jpg', 'jpeg'],
-                                        help="Select a petri dish image from your computer")
+                                        label_visibility="hidden")
         
         if uploaded_file is not None:
-            st.success(f"✓ Image loaded: {uploaded_file.name}")
+            st.success(f"✓ {uploaded_file.name}")
             # Show image preview
             image = Image.open(uploaded_file)
             st.image(image, caption="Preview", width=200)
-        else:
-            st.info("💡 Try dragging your image file directly here")
-            st.warning("Please upload an image to begin analysis")
         
         st.header("Analysis Parameters")
         st.caption("Adjust image processing settings")
