@@ -145,17 +145,67 @@ def main():
         run_density_analysis = st.checkbox("Analyze density", value=True,
                                           help="Measure colony opacity and texture")
         
-        # Add comprehensive guide section
+        # Add guide button in sidebar
         st.header("User Guide")
-        
-        # Button to show guide directly in sidebar
-        if st.button("Use Guide", help="Click to open the complete package guide"):
+        if st.button("Use Guide", help="Click to open the complete package guide on the right"):
             st.session_state.show_guide = True
         
-        # Show guide directly in sidebar if activated
-        if st.session_state.get('show_guide', False):
-            # Close button at top of guide
-            if st.button("Close Guide", key="close_guide"):
+        # Store current parameters in session state
+        current_params = dict(
+                    bilateral_d=bilateral_d,
+                    bilateral_sigma_color=bilateral_sigma_color,
+                    bilateral_sigma_space=bilateral_sigma_space,
+                    clahe_clip_limit=clahe_clip_limit,
+                    clahe_tile_grid=(clahe_tile_grid, clahe_tile_grid),
+                    gamma=gamma,
+                    sharpen_strength=sharpen_strength,
+                    margin_percent=margin_percent,
+                    adaptive_block_size=adaptive_block_size,
+                    adaptive_c=adaptive_c,
+                    min_colony_size=min_colony_size,
+                    max_colony_size=max_colony_size,
+                    min_distance=watershed_min_distance,
+                    watershed=True,
+                    color_n_clusters=(color_n_clusters if color_n_clusters > 0 else None),
+                    color_random_state=color_random_state,
+                    color_n_init=color_n_init,
+                    n_top_colonies=n_top_colonies,
+                    penalty_factor=penalty_factor
+                )
+        
+        if st.button(" Run Analysis", type="primary"):
+            if uploaded_file is not None:
+                st.session_state.run_analysis = True
+                st.session_state.uploaded_file = uploaded_file
+                st.session_state.params = current_params
+                # Clear cached results to force re-analysis
+                if 'analysis_results' in st.session_state:
+                    del st.session_state.analysis_results
+            else:
+                st.error("Please upload an image first!")
+        
+        # Add a button to re-run analysis with current parameters
+        if 'run_analysis' in st.session_state and st.session_state.run_analysis:
+            if st.button(" Update Display", type="secondary"):
+                # Update parameters and clear cache
+                st.session_state.params = current_params
+                if 'analysis_results' in st.session_state:
+                    del st.session_state.analysis_results
+                st.rerun()
+    
+    # Create main layout with guide on right if activated
+    if st.session_state.get('show_guide', False):
+        col1, col2 = st.columns([2, 1])  # Main content gets 2/3, guide gets 1/3
+        main_container = col1
+        guide_container = col2
+    else:
+        main_container = st.container()
+        guide_container = None
+    
+    # Show guide in right column if activated
+    if guide_container is not None:
+        with guide_container:
+            if st.button("Close Guide", key="close_guide_main"):
                 st.session_state.show_guide = False
                 st.rerun()
             
@@ -342,126 +392,82 @@ def main():
             - Experiment with watershed parameters for touching colonies
             - Check binary mask tab to validate detection accuracy
             """)
-        
-        # Store current parameters in session state
-        current_params = dict(
-                    bilateral_d=bilateral_d,
-                    bilateral_sigma_color=bilateral_sigma_color,
-                    bilateral_sigma_space=bilateral_sigma_space,
-                    clahe_clip_limit=clahe_clip_limit,
-                    clahe_tile_grid=(clahe_tile_grid, clahe_tile_grid),
-                    gamma=gamma,
-                    sharpen_strength=sharpen_strength,
-                    margin_percent=margin_percent,
-                    adaptive_block_size=adaptive_block_size,
-                    adaptive_c=adaptive_c,
-                    min_colony_size=min_colony_size,
-                    max_colony_size=max_colony_size,
-                    min_distance=watershed_min_distance,
-                    watershed=True,
-                    color_n_clusters=(color_n_clusters if color_n_clusters > 0 else None),
-                    color_random_state=color_random_state,
-                    color_n_init=color_n_init,
-                    n_top_colonies=n_top_colonies,
-                    penalty_factor=penalty_factor
-                )
-        
-        if st.button(" Run Analysis", type="primary"):
-            if uploaded_file is not None:
-                st.session_state.run_analysis = True
-                st.session_state.uploaded_file = uploaded_file
-                st.session_state.params = current_params
-                # Clear cached results to force re-analysis
-                if 'analysis_results' in st.session_state:
-                    del st.session_state.analysis_results
-            else:
-                st.error("Please upload an image first!")
-        
-        # Add a button to re-run analysis with current parameters
-        if 'run_analysis' in st.session_state and st.session_state.run_analysis:
-            if st.button(" Update Display", type="secondary"):
-                # Update parameters and clear cache
-                st.session_state.params = current_params
-                if 'analysis_results' in st.session_state:
-                    del st.session_state.analysis_results
-                st.rerun()
-    
+
     # main content area
-    if 'run_analysis' in st.session_state and st.session_state.run_analysis:
-        if 'uploaded_file' in st.session_state:
-            uploaded_file = st.session_state.uploaded_file
-            stored_params = st.session_state.get('params', {})
-            
-            # Use stored parameters and convert old parameter names to new ones
-            params = stored_params.copy()
-            
-            # Convert old parameter names to new ones for ColonyAnalyzer compatibility
-            if 'watershed_min_distance' in params:
-                params['min_distance'] = params.pop('watershed_min_distance')
-            if 'watershed_threshold' in params:
-                params.pop('watershed_threshold')  # Remove unused parameter
-            if 'watershed' not in params:
-                params['watershed'] = True  # Add required parameter
-            
-            # save uploaded file temporarily
-            with open("temp_image.jpg", "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            
-            # Check if we need to re-run analysis or use cached results
-            if 'analysis_results' not in st.session_state:
-                # run analysis
-                with st.spinner(" Analyzing bacterial colonies..."):
+    with main_container:
+        if 'run_analysis' in st.session_state and st.session_state.run_analysis:
+            if 'uploaded_file' in st.session_state:
+                uploaded_file = st.session_state.uploaded_file
+                stored_params = st.session_state.get('params', {})
+                
+                # Use stored parameters and convert old parameter names to new ones
+                params = stored_params.copy()
+                
+                # Convert old parameter names to new ones for ColonyAnalyzer compatibility
+                if 'watershed_min_distance' in params:
+                    params['min_distance'] = params.pop('watershed_min_distance')
+                if 'watershed_threshold' in params:
+                    params.pop('watershed_threshold')  # Remove unused parameter
+                if 'watershed' not in params:
+                    params['watershed'] = True  # Add required parameter
+                
+                # save uploaded file temporarily
+                with open("temp_image.jpg", "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                
+                # Check if we need to re-run analysis or use cached results
+                if 'analysis_results' not in st.session_state:
+                    # run analysis
+                    with st.spinner(" Analyzing bacterial colonies..."):
 
-                    
-                    analyzer = ColonyAnalyzer(**params)
-                    results = analyzer.run_full_analysis("temp_image.jpg")
-                    # add binary mask to results
-                    if hasattr(analyzer, 'final_binary_mask'):
-                        results['final_binary_mask'] = analyzer.final_binary_mask
-                    # Cache the results
-                    st.session_state.analysis_results = results
-                    st.session_state.params = params
-            else:
-                # Use cached results
-                results = st.session_state.analysis_results
-            
-            if results is not None:
-                display_results(results, params.get('n_top_colonies', 20))
-            else:
-                st.error(" Analysis failed. Please check your image and try again.")
-            
-            # cleanup
-            import os
-            if os.path.exists("temp_image.jpg"):
-                os.remove("temp_image.jpg")
-    
-    else:
-        # welcome screen
-        st.markdown("""
-        ## Welcome to the Bacterial Colony Analyzer! 
-        
-        This app analyzes petri dish images to detect, characterize, and score bacterial colonies.
-        
-        ### What it does:
-        - **Detects colonies** using advanced image processing
-        - **Analyzes morphology** (size, shape, roundness)
-        - **Clusters by color** to group similar colonies
-        - **Measures density** and opacity characteristics
-        - **Scores colonies** based on multiple factors
-        - **Visualizes results** with interactive plots
-        
-        ### How to use:
-        1. Upload a petri dish image using the sidebar
-        2. Adjust analysis parameters if needed
-        3. Click "Run Analysis" to start processing
-        4. Explore the results in the tabs below
-        
-        ### Supported formats:
-        - PNG, JPG, JPEG images
-        - High resolution recommended for best results
-        """)
-        
+                        
+                        analyzer = ColonyAnalyzer(**params)
+                        results = analyzer.run_full_analysis("temp_image.jpg")
+                        # add binary mask to results
+                        if hasattr(analyzer, 'final_binary_mask'):
+                            results['final_binary_mask'] = analyzer.final_binary_mask
+                        # Cache the results
+                        st.session_state.analysis_results = results
+                        st.session_state.params = params
+                else:
+                    # Use cached results
+                    results = st.session_state.analysis_results
+                
+                if results is not None:
+                    display_results(results, params.get('n_top_colonies', 20))
+                else:
+                    st.error(" Analysis failed. Please check your image and try again.")
+                
+                # cleanup
+                import os
+                if os.path.exists("temp_image.jpg"):
+                    os.remove("temp_image.jpg")
 
+        else:
+            # welcome screen
+            st.markdown("""
+            ## Welcome to the Bacterial Colony Analyzer! 
+            
+            This app analyzes petri dish images to detect, characterize, and score bacterial colonies.
+            
+            ### What it does:
+            - **Detects colonies** using advanced image processing
+            - **Analyzes morphology** (size, shape, roundness)
+            - **Clusters by color** to group similar colonies
+            - **Measures density** and opacity characteristics
+            - **Scores colonies** based on multiple factors
+            - **Visualizes results** with interactive plots
+            
+            ### How to use:
+            1. Upload a petri dish image using the sidebar
+            2. Adjust analysis parameters if needed
+            3. Click "Run Analysis" to start processing
+            4. Explore the results in the tabs below
+            
+            ### Supported formats:
+            - PNG, JPG, JPEG images
+            - High resolution recommended for best results
+            """)
 
 def display_results(results, n_top_colonies):
     # display analysis results in organized tabs
