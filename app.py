@@ -66,19 +66,53 @@ def main():
     st.title("Bacterial Colony Analyzer")
     st.caption("Advanced image analysis for petri dish colony detection and characterization")
     
+    # Add mode selection
+    analysis_mode = st.radio(
+        "Choose Analysis Mode:",
+        ["Single Image Analysis", "Multi-Image Comparison"],
+        horizontal=True
+    )
+    
     # sidebar for parameters
     with st.sidebar:
-        st.header("Upload Image")
+        if analysis_mode == "Single Image Analysis":
+            st.header("Upload Image")
+            
+            uploaded_file = st.file_uploader("", 
+                                            type=['png', 'jpg', 'jpeg'],
+                                            label_visibility="hidden")
+            
+            if uploaded_file is not None:
+                st.success(f"✓ {uploaded_file.name}")
+                # Show image preview
+                image = Image.open(uploaded_file)
+                st.image(image, caption="Preview", width=200)
         
-        uploaded_file = st.file_uploader("", 
-                                        type=['png', 'jpg', 'jpeg'],
-                                        label_visibility="hidden")
-        
-        if uploaded_file is not None:
-            st.success(f"✓ {uploaded_file.name}")
-            # Show image preview
-            image = Image.open(uploaded_file)
-            st.image(image, caption="Preview", width=200)
+        else:  # Multi-Image Comparison mode
+            st.header("Upload Multiple Images")
+            
+            uploaded_files = st.file_uploader(
+                "Select up to 100 images", 
+                type=['png', 'jpg', 'jpeg'],
+                accept_multiple_files=True
+            )
+            
+            if uploaded_files:
+                if len(uploaded_files) > 100:
+                    st.error("Please select no more than 100 images")
+                    uploaded_files = uploaded_files[:100]
+                
+                st.success(f"✓ {len(uploaded_files)} images uploaded")
+                
+                # Sample labeling interface
+                st.subheader("Label Samples")
+                sample_labels = {}
+                for i, file in enumerate(uploaded_files):
+                    sample_labels[file.name] = st.text_input(
+                        f"Label for {file.name[:20]}...", 
+                        value=f"Sample_{i+1}",
+                        key=f"label_{i}"
+                    )
         
         st.header("Analysis Parameters")
         st.caption("Adjust image processing settings")
@@ -173,16 +207,32 @@ def main():
                     penalty_factor=penalty_factor
                 )
         
-        if st.button(" Run Analysis", type="primary"):
-            if uploaded_file is not None:
-                st.session_state.run_analysis = True
-                st.session_state.uploaded_file = uploaded_file
-                st.session_state.params = current_params
-                # Clear cached results to force re-analysis
-                if 'analysis_results' in st.session_state:
-                    del st.session_state.analysis_results
-            else:
-                st.error("Please upload an image first!")
+        if analysis_mode == "Single Image Analysis":
+            if st.button(" Run Analysis", type="primary"):
+                if uploaded_file is not None:
+                    st.session_state.run_analysis = True
+                    st.session_state.uploaded_file = uploaded_file
+                    st.session_state.params = current_params
+                    st.session_state.analysis_mode = "single"
+                    # Clear cached results to force re-analysis
+                    if 'analysis_results' in st.session_state:
+                        del st.session_state.analysis_results
+                else:
+                    st.error("Please upload an image first!")
+        
+        else:  # Multi-Image Comparison mode
+            if st.button(" Run Multi-Image Analysis", type="primary"):
+                if uploaded_files and len(uploaded_files) >= 2:
+                    st.session_state.run_analysis = True
+                    st.session_state.uploaded_files = uploaded_files
+                    st.session_state.sample_labels = sample_labels
+                    st.session_state.params = current_params
+                    st.session_state.analysis_mode = "multi"
+                    # Clear cached results to force re-analysis
+                    if 'multi_analysis_results' in st.session_state:
+                        del st.session_state.multi_analysis_results
+                else:
+                    st.error("Please upload at least 2 images for comparison!")
         
 
     
@@ -389,7 +439,9 @@ def main():
     # main content area
     with main_container:
         if 'run_analysis' in st.session_state and st.session_state.run_analysis:
-            if 'uploaded_file' in st.session_state:
+            analysis_mode = st.session_state.get('analysis_mode', 'single')
+            
+            if analysis_mode == 'single' and 'uploaded_file' in st.session_state:
                 uploaded_file = st.session_state.uploaded_file
                 stored_params = st.session_state.get('params', {})
                 
@@ -435,6 +487,27 @@ def main():
                 import os
                 if os.path.exists("temp_image.jpg"):
                     os.remove("temp_image.jpg")
+            
+            elif analysis_mode == 'multi' and 'uploaded_files' in st.session_state:
+                # Multi-image analysis
+                uploaded_files = st.session_state.uploaded_files
+                sample_labels = st.session_state.get('sample_labels', {})
+                stored_params = st.session_state.get('params', {})
+                
+                # Check if we need to re-run analysis or use cached results
+                if 'multi_analysis_results' not in st.session_state:
+                    # Run multi-image analysis
+                    with st.spinner(f"Analyzing {len(uploaded_files)} images..."):
+                        results = run_multi_image_analysis(uploaded_files, sample_labels, stored_params)
+                        st.session_state.multi_analysis_results = results
+                else:
+                    # Use cached results
+                    results = st.session_state.multi_analysis_results
+                
+                if results is not None:
+                    display_multi_image_results(results)
+                else:
+                    st.error("Multi-image analysis failed. Please check your images and try again.")
 
         else:
             # welcome screen
@@ -443,7 +516,9 @@ def main():
             
             This app analyzes petri dish images to detect, characterize, and score bacterial colonies.
             
-            ### What it does:
+            ### Analysis Modes:
+            
+            #### **Single Image Analysis**
             - **Detects colonies** using advanced image processing
             - **Analyzes morphology** (size, shape, roundness)
             - **Clusters by color** to group similar colonies
@@ -451,15 +526,26 @@ def main():
             - **Scores colonies** based on multiple factors
             - **Visualizes results** with interactive plots
             
+            #### **Multi-Image Comparison** 
+            - **Compare multiple samples** (up to 100 images)
+            - **PCA analysis** to identify microbiome variability
+            - **Similarity analysis** between different samples
+            - **Statistical comparisons** (ANOVA, t-tests)
+            - **Variance ranking** to find most/least variable microbiomes
+            - **Interactive visualizations** for comparative analysis
+            
             ### How to use:
-            1. Upload a petri dish image using the sidebar
-            2. Adjust analysis parameters if needed
-            3. Click "Run Analysis" to start processing
-            4. Explore the results in the tabs below
+            1. **Choose analysis mode** above (Single or Multi-Image)
+            2. **Upload image(s)** using the sidebar
+            3. **Label samples** (for multi-image mode)
+            4. **Adjust analysis parameters** if needed
+            5. **Click "Run Analysis"** to start processing
+            6. **Explore results** in the organized tabs
             
             ### Supported formats:
             - PNG, JPG, JPEG images
             - High resolution recommended for best results
+            - For multi-image: consistent lighting and setup recommended
             """)
 
 def display_results(results, n_top_colonies):
@@ -948,6 +1034,382 @@ def display_binary_mask(results, n_top_colonies):
                     st.caption(f"Score: {row[1]['bio_interest']:.2f}")
     else:
         st.warning("No binary mask available.")
+
+def run_multi_image_analysis(uploaded_files, sample_labels, params):
+    # runs analysis on multiple images and combines results for comparison
+    print("starting multi image analysis")
+    
+    all_results = {}
+    combined_data = []
+    
+    for i, uploaded_file in enumerate(uploaded_files):
+        try:
+            # save temporary file
+            temp_filename = f"temp_image_{i}.jpg"
+            with open(temp_filename, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            
+            # run single analysis
+            analyzer = ColonyAnalyzer(**params)
+            results = analyzer.run_full_analysis(temp_filename)
+            
+            # get sample label
+            sample_name = sample_labels.get(uploaded_file.name, f"Sample_{i+1}")
+            
+            # store results
+            all_results[sample_name] = results
+            
+            # extract features for comparison
+            if results and 'combined_df' in results and not results['combined_df'].empty:
+                df = results['combined_df'].copy()
+                df['sample'] = sample_name
+                df['image_name'] = uploaded_file.name
+                combined_data.append(df)
+            
+            # cleanup
+            import os
+            if os.path.exists(temp_filename):
+                os.remove(temp_filename)
+                
+        except Exception as e:
+            print(f"error processing {uploaded_file.name}: {e}")
+            continue
+    
+    if not combined_data:
+        return None
+    
+    # combine all data
+    combined_df = pd.concat(combined_data, ignore_index=True)
+    
+    # run comparative analysis
+    comparison_results = {
+        'individual_results': all_results,
+        'combined_df': combined_df,
+        'sample_count': len(all_results),
+        'total_colonies': len(combined_df)
+    }
+    
+    # add pca analysis
+    try:
+        comparison_results['pca_results'] = run_pca_analysis(combined_df)
+    except Exception as e:
+        print(f"pca analysis failed: {e}")
+        comparison_results['pca_results'] = None
+    
+    # add similarity analysis
+    try:
+        comparison_results['similarity_results'] = run_similarity_analysis(combined_df)
+    except Exception as e:
+        print(f"similarity analysis failed: {e}")
+        comparison_results['similarity_results'] = None
+    
+    return comparison_results
+
+def run_pca_analysis(combined_df):
+    # performs pca on colony features to identify variability patterns
+    from sklearn.decomposition import PCA
+    from sklearn.preprocessing import StandardScaler
+    
+    # select numeric features for pca
+    numeric_cols = ['area', 'perimeter', 'circularity', 'aspect_ratio', 'solidity']
+    available_cols = [col for col in numeric_cols if col in combined_df.columns]
+    
+    if len(available_cols) < 2:
+        return None
+    
+    # prepare data
+    feature_data = combined_df[available_cols].dropna()
+    samples = combined_df.loc[feature_data.index, 'sample']
+    
+    # standardize features
+    scaler = StandardScaler()
+    scaled_data = scaler.fit_transform(feature_data)
+    
+    # run pca
+    pca = PCA(n_components=min(len(available_cols), 5))
+    pca_data = pca.fit_transform(scaled_data)
+    
+    # create pca dataframe
+    pca_df = pd.DataFrame(pca_data, columns=[f'PC{i+1}' for i in range(pca_data.shape[1])])
+    pca_df['sample'] = samples.values
+    
+    # calculate variance by sample
+    sample_variance = {}
+    for sample in pca_df['sample'].unique():
+        sample_data = pca_df[pca_df['sample'] == sample]
+        # calculate variance across first 2 pcs
+        variance = sample_data[['PC1', 'PC2']].var().sum()
+        sample_variance[sample] = variance
+    
+    return {
+        'pca_df': pca_df,
+        'explained_variance': pca.explained_variance_ratio_,
+        'feature_names': available_cols,
+        'sample_variance': sample_variance,
+        'most_variable': max(sample_variance, key=sample_variance.get),
+        'least_variable': min(sample_variance, key=sample_variance.get)
+    }
+
+def run_similarity_analysis(combined_df):
+    # calculates similarity between samples based on colony characteristics
+    import scipy.stats as stats
+    from scipy.spatial.distance import pdist, squareform
+    
+    # group by sample and calculate summary statistics
+    sample_stats = combined_df.groupby('sample').agg({
+        'area': ['mean', 'std', 'count'],
+        'circularity': ['mean', 'std'] if 'circularity' in combined_df.columns else ['count'],
+        'aspect_ratio': ['mean', 'std'] if 'aspect_ratio' in combined_df.columns else ['count']
+    }).round(3)
+    
+    # flatten column names
+    sample_stats.columns = ['_'.join(col).strip() for col in sample_stats.columns]
+    
+    # calculate pairwise distances
+    numeric_cols = sample_stats.select_dtypes(include=[np.number]).columns
+    if len(numeric_cols) > 0:
+        distances = pdist(sample_stats[numeric_cols].fillna(0), metric='euclidean')
+        similarity_matrix = 1 / (1 + squareform(distances))
+        np.fill_diagonal(similarity_matrix, 1.0)
+        
+        similarity_df = pd.DataFrame(
+            similarity_matrix, 
+            index=sample_stats.index, 
+            columns=sample_stats.index
+        )
+    else:
+        similarity_df = None
+    
+    return {
+        'sample_stats': sample_stats,
+        'similarity_matrix': similarity_df
+    }
+
+def display_multi_image_results(results):
+    # displays multi-image comparison results with pca and similarity plots
+    st.header("Multi-Image Analysis Results")
+    
+    # overview metrics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Samples", results['sample_count'])
+    with col2:
+        st.metric("Total Colonies", results['total_colonies'])
+    with col3:
+        avg_colonies = results['total_colonies'] / results['sample_count']
+        st.metric("Avg Colonies/Sample", f"{avg_colonies:.1f}")
+    with col4:
+        if results['pca_results']:
+            most_variable = results['pca_results']['most_variable']
+            st.metric("Most Variable", most_variable)
+    
+    # create tabs for different analyses
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "Sample Overview",
+        "PCA Analysis", 
+        "Similarity Analysis",
+        "Colony Comparison",
+        "Statistical Tests"
+    ])
+    
+    with tab1:
+        display_sample_overview(results)
+    
+    with tab2:
+        display_pca_results(results)
+    
+    with tab3:
+        display_similarity_results(results)
+    
+    with tab4:
+        display_colony_comparison(results)
+    
+    with tab5:
+        display_statistical_tests(results)
+
+def display_sample_overview(results):
+    # shows overview of each sample
+    st.subheader("Sample Summary")
+    
+    # sample statistics table
+    sample_summary = []
+    for sample_name, sample_results in results['individual_results'].items():
+        if sample_results and 'colony_properties' in sample_results:
+            colony_count = len(sample_results['colony_properties'])
+            avg_area = np.mean([prop.area for prop in sample_results['colony_properties']])
+            sample_summary.append({
+                'Sample': sample_name,
+                'Colony Count': colony_count,
+                'Average Area': f"{avg_area:.1f}",
+                'Status': 'Analyzed'
+            })
+    
+    if sample_summary:
+        summary_df = pd.DataFrame(sample_summary)
+        st.dataframe(summary_df, use_container_width=True, hide_index=True)
+    
+    # show sample images grid
+    st.subheader("Sample Images")
+    if len(results['individual_results']) > 0:
+        cols = st.columns(min(3, len(results['individual_results'])))
+        for i, (sample_name, sample_results) in enumerate(results['individual_results'].items()):
+            with cols[i % 3]:
+                if sample_results and 'original_image' in sample_results:
+                    st.image(sample_results['original_image'], caption=sample_name, use_column_width=True)
+
+def display_pca_results(results):
+    # displays pca analysis results
+    import plotly.express as px
+    
+    st.subheader("Principal Component Analysis")
+    
+    if not results['pca_results']:
+        st.warning("PCA analysis not available - insufficient numeric features")
+        return
+    
+    pca_data = results['pca_results']
+    
+    # variance explained
+    st.write("**Variance Explained by Components:**")
+    for i, var in enumerate(pca_data['explained_variance']):
+        st.write(f"PC{i+1}: {var:.3f} ({var*100:.1f}%)")
+    
+    # pca scatter plot
+    st.subheader("PCA Scatter Plot")
+    fig = px.scatter(
+        pca_data['pca_df'], 
+        x='PC1', y='PC2', 
+        color='sample',
+        title="Sample Variability in Colony Feature Space",
+        labels={'PC1': f"PC1 ({pca_data['explained_variance'][0]*100:.1f}%)",
+                'PC2': f"PC2 ({pca_data['explained_variance'][1]*100:.1f}%)"}
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # variability ranking
+    st.subheader("Sample Variability Ranking")
+    variance_df = pd.DataFrame.from_dict(
+        pca_data['sample_variance'], 
+        orient='index', 
+        columns=['Variance Score']
+    ).sort_values('Variance Score', ascending=False)
+    
+    fig_bar = px.bar(
+        variance_df.reset_index(),
+        x='index', y='Variance Score',
+        title="Microbiome Variability by Sample",
+        labels={'index': 'Sample', 'Variance Score': 'Variance Score'}
+    )
+    st.plotly_chart(fig_bar, use_container_width=True)
+    
+    st.write(f"**Most variable microbiome:** {pca_data['most_variable']}")
+    st.write(f"**Least variable microbiome:** {pca_data['least_variable']}")
+
+def display_similarity_results(results):
+    # displays similarity analysis results
+    import plotly.express as px
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    
+    st.subheader("Sample Similarity Analysis")
+    
+    if not results['similarity_results'] or results['similarity_results']['similarity_matrix'] is None:
+        st.warning("Similarity analysis not available")
+        return
+    
+    similarity_data = results['similarity_results']
+    
+    # similarity heatmap
+    st.subheader("Sample Similarity Matrix")
+    fig, ax = plt.subplots(figsize=(8, 6))
+    sns.heatmap(
+        similarity_data['similarity_matrix'], 
+        annot=True, 
+        cmap='viridis', 
+        fmt='.3f',
+        ax=ax
+    )
+    ax.set_title("Pairwise Sample Similarity")
+    st.pyplot(fig)
+    
+    # sample statistics
+    st.subheader("Sample Statistics")
+    st.dataframe(similarity_data['sample_stats'].round(3), use_container_width=True)
+
+def display_colony_comparison(results):
+    # displays colony feature comparisons across samples
+    import plotly.express as px
+    
+    st.subheader("Colony Feature Comparison")
+    
+    combined_df = results['combined_df']
+    
+    # feature distribution plots
+    numeric_features = ['area', 'perimeter', 'circularity', 'aspect_ratio', 'solidity']
+    available_features = [f for f in numeric_features if f in combined_df.columns]
+    
+    if available_features:
+        selected_feature = st.selectbox("Select feature to compare:", available_features)
+        
+        # box plot
+        fig = px.box(
+            combined_df, 
+            x='sample', y=selected_feature,
+            title=f"{selected_feature.title()} Distribution by Sample"
+        )
+        fig.update_xaxes(tickangle=45)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # violin plot
+        fig2 = px.violin(
+            combined_df, 
+            x='sample', y=selected_feature,
+            title=f"{selected_feature.title()} Density by Sample"
+        )
+        fig2.update_xaxes(tickangle=45)
+        st.plotly_chart(fig2, use_container_width=True)
+
+def display_statistical_tests(results):
+    # displays statistical test results between samples
+    import scipy.stats as stats
+    
+    st.subheader("Statistical Comparisons")
+    
+    combined_df = results['combined_df']
+    samples = combined_df['sample'].unique()
+    
+    if len(samples) < 2:
+        st.warning("Need at least 2 samples for statistical comparison")
+        return
+    
+    # anova for area differences
+    if 'area' in combined_df.columns:
+        sample_groups = [combined_df[combined_df['sample'] == sample]['area'].dropna() for sample in samples]
+        
+        if all(len(group) > 0 for group in sample_groups):
+            f_stat, p_value = stats.f_oneway(*sample_groups)
+            
+            st.write("**One-way ANOVA for Colony Area:**")
+            st.write(f"F-statistic: {f_stat:.3f}")
+            st.write(f"P-value: {p_value:.6f}")
+            
+            if p_value < 0.05:
+                st.success("Significant differences found between samples (p < 0.05)")
+            else:
+                st.info("No significant differences found between samples (p ≥ 0.05)")
+    
+    # pairwise t-tests
+    if len(samples) == 2 and 'area' in combined_df.columns:
+        group1 = combined_df[combined_df['sample'] == samples[0]]['area'].dropna()
+        group2 = combined_df[combined_df['sample'] == samples[1]]['area'].dropna()
+        
+        if len(group1) > 0 and len(group2) > 0:
+            t_stat, p_value = stats.ttest_ind(group1, group2)
+            
+            st.write("**Independent t-test for Colony Area:**")
+            st.write(f"t-statistic: {t_stat:.3f}")
+            st.write(f"P-value: {p_value:.6f}")
+            st.write(f"Mean difference: {group1.mean() - group2.mean():.2f}")
 
 if __name__ == "__main__":
     main() 
