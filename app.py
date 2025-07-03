@@ -145,6 +145,193 @@ def main():
         run_density_analysis = st.checkbox("Analyze density", value=True,
                                           help="Measure colony opacity and texture")
         
+        # Add comprehensive guide section
+        st.header("User Guide")
+        with st.expander("Complete Package Guide", expanded=False):
+            st.markdown("""
+            ### Bacterial Colony Detection: Image Analysis Pipeline
+            
+            Bacterial colony counting and characterization is a fundamental task in microbiology. Manual analysis of petri dish images is time-consuming and prone to error, especially when dealing with large datasets or high-throughput experiments. This app provides a complete, 12-step workflow for analyzing photographs of petri dishes with bacterial colonies.
+            
+            ### Core Packages & Their Purpose
+            
+            #### **Image Processing**
+            - **OpenCV** (`cv2`) - core image operations, bilateral filtering, contour detection, morphological operations
+            - **scikit-image** (`skimage`) - advanced segmentation, watershed algorithm, morphology analysis, peak detection
+            - **Pillow** (`PIL`) - image loading and basic manipulations in streamlit interface
+            
+            #### **Scientific Computing** 
+            - **NumPy** (`numpy`) - array operations, mathematical computations, distance calculations
+            - **SciPy** (`scipy`) - distance transforms, morphological operations, texture analysis
+            - **pandas** - data organization, analysis results storage, dataframe operations
+            
+            #### **Machine Learning**
+            - **scikit-learn** (`sklearn`) - k-means clustering for color analysis, standardscaler for data normalization
+            - **KMeans clustering** - groups colonies by color similarity using lab color space
+            - **DBSCAN** - alternative clustering method for density-based grouping
+            
+            #### **Visualization**
+            - **Matplotlib** (`plt`) - basic plotting, image display, histograms, scatter plots
+            - **Seaborn** (`sns`) - statistical plots, distribution charts, enhanced visualizations
+            - **Plotly** (`px`) - interactive charts, 3d visualizations, pie charts
+            
+            #### **Web Interface**
+            - **Streamlit** (`st`) - creates this interactive web app with file upload and parameter controls
+            - **Authentication system** - email-based login with usage tracking and admin analytics
+            
+            ### Complete 12-Step Analysis Pipeline
+            
+            #### **Section 1: Environment Setup**
+            Prepares the environment by installing and importing all necessary image-processing and data-analysis libraries
+            
+            #### **Section 2: Image Upload** 
+            Lets you upload a dish photograph via streamlit file picker
+            
+            #### **Section 3: Image Display**
+            Shows the loaded photograph and prints basic properties (dimensions, color channels) so you can confirm it loaded correctly
+            
+            #### **Section 4: Image Preprocessing**
+            - **bilateral filtering** - denoise while keeping edges sharp using cv2.bilateralFilter with diameter=9, sigmaColor=75, sigmaSpace=75
+            - **CLAHE enhancement** - enhances local contrast using cv2.createCLAHE with clipLimit=3.0, tileGridSize=(8,8)
+            - **gamma correction** - adjusts brightness for optimal detection using gamma=1.2 
+            - **sharpening** - enhances colony boundaries using convolution kernel [[-1,-1,-1],[-1,9,-1],[-1,-1,-1]]
+            
+            #### **Section 5: Plate Detection**
+            - locates the inner region of the petri dish and creates a binary mask of the plate area
+            - creates inner margin to exclude plate edges (8% margin from edges)
+            - uses otsu's thresholding and contour analysis to refine the region
+            - finds largest contour in inner area and combines with inner margin for final mask
+            
+            #### **Section 6: Colony Segmentation**
+            - **adaptive thresholding** - separates colonies from background using cv2.adaptiveThreshold with ADAPTIVE_THRESH_GAUSSIAN_C
+            - **morphological operations** - cleans up detected regions using opening and closing operations
+            - **watershed algorithm** - separates touching/overlapping colonies using scipy.ndimage.distance_transform_edt and skimage.segmentation.watershed
+            - **size filtering** - removes artifacts by filtering colonies between min_size=15 and max_size=10000 pixels
+            
+            #### **Section 7: Morphology Analysis**
+            Measures size, roundness, elongation, solidity, and classifies edge style and form for every colony:
+            - **area & perimeter** - basic size measurements from regionprops
+            - **circularity** - calculated as 4*π*area/perimeter² to measure roundness
+            - **aspect ratio** - major_axis/minor_axis to measure elongation
+            - **solidity** - measures how well-filled the colony shape is
+            - **convexity** - measures edge smoothness by comparing area to convex hull area
+            - **margin classification** - categorizes edge types (entire, undulate, lobate, serrate) based on convexity and complexity
+            - **form classification** - categorizes overall shape (circular, oval, irregular, filamentous) based on circularity and aspect ratio
+            
+            #### **Section 8: Color Analysis**
+            Extracts each colony's dominant hue, converts to lab color space, and groups similar-looking colonies:
+            - **dominant color extraction** - finds main color using k-means clustering within each colony
+            - **RGB to LAB conversion** - uses perceptually uniform color space for better comparison
+            - **k-means clustering** - groups colonies with similar colors using sklearn.KMeans
+            - **elbow method** - automatically determines optimal number of color groups by analyzing inertia curves
+            - **color visualization** - draws contours in distinct colors to show each group
+            
+            #### **Section 9: Density Analysis**
+            Quantifies brightness, texture, and saturation metrics to classify how "dense" or "translucent" each colony appears:
+            - **opacity scoring** - measures how different colony is from background using abs(mean_intensity - background_mean)/background_std
+            - **texture analysis** - quantifies surface roughness using local variance filters
+            - **density gradient** - compares center vs edge density using distance transforms
+            - **density classification** - categories from very_sparse to very_dense based on opacity thresholds
+            - **saturation analysis** - measures color intensity using hsv color space
+            
+            #### **Section 10: Combined Scoring**
+            Merges shape, color, and density features into a single "interest" score, highlighting the most distinctive colonies:
+            - **morphology scores** - rewards interesting shapes using percentile-based metrics
+            - **form rarity** - prioritizes uncommon colony types by calculating frequency-based scores
+            - **size preferences** - favors medium-sized colonies using logarithmic ranking
+            - **density bonuses** - rewards high-density colonies with enhanced weighting
+            - **novelty combinations** - finds unique feature combinations and rare form-color pairs
+            - **diversity penalties** - reduces scores for too-similar colonies to encourage variety
+            
+            #### **Section 11: Top Colony Visualization**
+            Draws colored outlines around the highest-scoring colonies on the full dish and zooms in on each:
+            - highlights top 5 colonies on full image with colored outlines and rank labels
+            - displays original and marked images side by side for context
+            - extracts zoomed regions around each top colony center (100 pixel radius)
+            - adds crosshairs and detailed annotations for easy inspection
+            
+            #### **Section 12: Binary Mask View**
+            Provides alternate view by outlining top colonies on simple black-and-white mask:
+            - creates binary image where colonies are white (255) and background is black (0)
+            - outlines top colonies with colored contours and measurement grids
+            - shows side-by-side views for precise sizing and validation
+            
+            ### App Results & Outputs
+            
+            #### **Overview Tab**
+            - summary statistics (total colonies, average area, dense/circular counts)
+            - before/after image comparison showing preprocessing effects
+            - colony detection visualization with green outlines
+            
+            #### **Colony Details Tab**
+            - complete morphology measurements table with sortable columns
+            - individual colony characteristics including area, circularity, form, margin
+            - filterable data for detailed analysis
+            
+            #### **Color Analysis Tab**
+            - color cluster distribution pie chart showing group percentages
+            - colonies colored by cluster group with distinct outline colors
+            - dominant color visualization for each detected group
+            
+            #### **Morphology Tab**
+            - shape distribution charts showing form and margin counts
+            - circularity vs area scatter plots for relationship analysis
+            - statistical breakdowns of morphological features
+            
+            #### **Top Colonies Tab**
+            - highest-scoring colonies with thumbnail images
+            - detailed scoring breakdown showing individual metric contributions
+            - reasons for high interest scores with feature explanations
+            
+            #### **Binary Mask Tab**
+            - raw detection mask overlay for technical validation
+            - binary view showing exactly what was detected as colonies
+            - useful for adjusting parameters and troubleshooting
+            
+            ### Parameter Guide
+            
+            #### **Image Processing Parameters**
+            - **bilateral filter diameter** - pixel neighborhood size for noise reduction (3-21, default 9)
+            - **bilateral sigmaColor** - color space sigma for filtering (10-150, default 75)
+            - **bilateral sigmaSpace** - coordinate space sigma (10-150, default 75)
+            - **CLAHE clip limit** - contrast enhancement strength (1-10, default 3)
+            - **CLAHE tile grid** - local enhancement grid size (2-32, default 8)
+            - **gamma correction** - brightness adjustment (0.5-2.5, default 1.2)
+            - **sharpen strength** - edge enhancement intensity (0-2, default 1.0)
+            
+            #### **Colony Detection Parameters**
+            - **plate margin percent** - edge exclusion percentage (0.05-0.20, default 0.08)
+            - **min colony size** - minimum area in pixels (10-50, default 15)
+            - **max colony size** - maximum area in pixels (5000-20000, default 10000)
+            - **adaptive block size** - threshold calculation window (11-25, must be odd, default 15)
+            - **adaptive C** - threshold adjustment constant (1-10, default 3)
+            - **watershed min distance** - minimum separation between peaks (5-15, default 8)
+            
+            #### **Advanced Options**
+            - **color clustering** - number of color groups (0=auto, 1-10)
+            - **scoring weights** - penalty factor for diversity (0-1, default 0.5)
+            - **display settings** - number of top colonies to show (1-50, default 20)
+            
+            ### Technical Implementation Notes
+            - uses reproducible random seeds (42) for consistent k-means results
+            - caches analysis results in streamlit session state for parameter adjustments
+            - processes images up to 20MB with automatic format conversion
+            - optimized for petri dish images with good contrast and lighting
+            - implements elbow method for automatic cluster detection
+            - uses lab color space for perceptually uniform color analysis
+            
+            ### Tips for Best Results
+            - use well-lit, high-contrast images with uniform illumination
+            - ensure colonies are clearly visible against plate background
+            - adjust bilateral filter parameters if image is very noisy
+            - increase CLAHE clip limit for low-contrast images
+            - adjust gamma correction for over/under-exposed images
+            - fine-tune size limits to exclude debris and large artifacts
+            - use color clustering when colonies have distinct pigmentation
+            - experiment with watershed parameters for touching colonies
+            - check binary mask tab to validate detection accuracy
+            """)
+        
         # Store current parameters in session state
         current_params = dict(
                     bilateral_d=bilateral_d,
