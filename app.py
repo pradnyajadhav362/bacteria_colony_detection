@@ -191,10 +191,10 @@ def main():
             Shows the loaded photograph and prints basic properties (dimensions, color channels) so you can confirm it loaded correctly
             
             #### **Section 4: Image Preprocessing**
-            - **bilateral filtering** - Denoise while keeping edges sharp using cv2.bilateralFilter with diameter=9, sigmaColor=75, sigmaSpace=75
-            - **CLAHE enhancement** - Enhances local contrast using cv2.createCLAHE with clipLimit=3.0, tileGridSize=(8,8)
-            - **gamma correction** - Adjusts brightness for optimal detection using gamma=1.2 
-            - **sharpening** - Enhances colony boundaries using convolution kernel [[-1,-1,-1],[-1,9,-1],[-1,-1,-1]]
+            - **Bilateral Filtering** - Denoise while keeping edges sharp using cv2.bilateralFilter with diameter=9, sigmaColor=75, sigmaSpace=75
+            - **CLAHE Enhancement** - Enhances local contrast using cv2.createCLAHE with clipLimit=3.0, tileGridSize=(8,8)
+            - **Gamma Correction** - Adjusts brightness for optimal detection using gamma=1.2 
+            - **Sharpening** - Enhances colony boundaries using convolution kernel [[-1,-1,-1],[-1,9,-1],[-1,-1,-1]]
             
             #### **Section 5: Plate Detection**
             - Locates the inner region of the petri dish and creates a binary mask of the plate area
@@ -203,45 +203,45 @@ def main():
             - Finds largest contour in inner area and combines with inner margin for final mask
             
             #### **Section 6: Colony Segmentation**
-            - **adaptive thresholding** - Separates colonies from background using cv2.adaptiveThreshold with ADAPTIVE_THRESH_GAUSSIAN_C
-            - **morphological operations** - Cleans up detected regions using opening and closing operations
-            - **watershed algorithm** - Separates touching/overlapping colonies using scipy.ndimage.distance_transform_edt and skimage.segmentation.watershed
-            - **size filtering** - Removes artifacts by filtering colonies between min_size=15 and max_size=10000 pixels
+            - **Adaptive Thresholding** - Separates colonies from background using cv2.adaptiveThreshold with ADAPTIVE_THRESH_GAUSSIAN_C
+            - **Morphological Operations** - Cleans up detected regions using opening and closing operations
+            - **Watershed Algorithm** - Separates touching/overlapping colonies using scipy.ndimage.distance_transform_edt and skimage.segmentation.watershed
+            - **Size Filtering** - Removes artifacts by filtering colonies between min_size=15 and max_size=10000 pixels
             
             #### **Section 7: Morphology Analysis**
             Measures size, roundness, elongation, solidity, and classifies edge style and form for every colony:
-            - **area & perimeter** - Basic size measurements from regionprops
-            - **circularity** - Calculated as 4*π*area/perimeter² to measure roundness
-            - **aspect ratio** - Major_axis/minor_axis to measure elongation
-            - **solidity** - Measures how well-filled the colony shape is
-            - **convexity** - Measures edge smoothness by comparing area to convex hull area
-            - **margin classification** - Categorizes edge types (entire, undulate, lobate, serrate) based on convexity and complexity
-            - **form classification** - Categorizes overall shape (circular, oval, irregular, filamentous) based on circularity and aspect ratio
+            - **Area & Perimeter** - Basic size measurements from regionprops
+            - **Circularity** - Calculated as 4*π*area/perimeter² to measure roundness
+            - **Aspect Ratio** - Major_axis/minor_axis to measure elongation
+            - **Solidity** - Measures how well-filled the colony shape is
+            - **Convexity** - Measures edge smoothness by comparing area to convex hull area
+            - **Margin Classification** - Categorizes edge types (entire, undulate, lobate, serrate) based on convexity and complexity
+            - **Form Classification** - Categorizes overall shape (circular, oval, irregular, filamentous) based on circularity and aspect ratio
             
             #### **Section 8: Color Analysis**
             Extracts each colony's dominant hue, converts to lab color space, and groups similar-looking colonies:
-            - **dominant color extraction** - Finds main color using k-means clustering within each colony
-            - **RGB to LAB conversion** - Uses perceptually uniform color space for better comparison
-            - **k-means clustering** - Groups colonies with similar colors using sklearn.KMeans
-            - **elbow method** - Automatically determines optimal number of color groups by analyzing inertia curves
-            - **color visualization** - Draws contours in distinct colors to show each group
+            - **Dominant Color Extraction** - Finds main color using k-means clustering within each colony
+            - **RGB to LAB Conversion** - Uses perceptually uniform color space for better comparison
+            - **K-means Clustering** - Groups colonies with similar colors using sklearn.KMeans
+            - **Elbow Method** - Automatically determines optimal number of color groups by analyzing inertia curves
+            - **Color Visualization** - Draws contours in distinct colors to show each group
             
             #### **Section 9: Density Analysis**
             Quantifies brightness, texture, and saturation metrics to classify how "dense" or "translucent" each colony appears:
-            - **opacity scoring** - Measures how different colony is from background using abs(mean_intensity - background_mean)/background_std
-            - **texture analysis** - Quantifies surface roughness using local variance filters
-            - **density gradient** - Compares center vs edge density using distance transforms
-            - **density classification** - Categories from very_sparse to very_dense based on opacity thresholds
-            - **saturation analysis** - Measures color intensity using hsv color space
+            - **Opacity Scoring** - Measures how different colony is from background using abs(mean_intensity - background_mean)/background_std
+            - **Texture Analysis** - Quantifies surface roughness using local variance filters
+            - **Density Gradient** - Compares center vs edge density using distance transforms
+            - **Density Classification** - Categories from very_sparse to very_dense based on opacity thresholds
+            - **Saturation Analysis** - Measures color intensity using hsv color space
             
             #### **Section 10: Combined Scoring**
             Merges shape, color, and density features into a single "interest" score, highlighting the most distinctive colonies:
-            - **morphology scores** - Rewards interesting shapes using percentile-based metrics
-            - **form rarity** - Prioritizes uncommon colony types by calculating frequency-based scores
-            - **size preferences** - Favors medium-sized colonies using logarithmic ranking
-            - **density bonuses** - Rewards high-density colonies with enhanced weighting
-            - **novelty combinations** - Finds unique feature combinations and rare form-color pairs
-            - **diversity penalties** - Reduces scores for too-similar colonies to encourage variety
+            - **Morphology Scores** - Rewards interesting shapes using percentile-based metrics
+            - **Form Rarity** - Prioritizes uncommon colony types by calculating frequency-based scores
+            - **Size Preferences** - Favors medium-sized colonies using logarithmic ranking
+            - **Density Bonuses** - Rewards high-density colonies with enhanced weighting
+            - **Novelty Combinations** - Finds unique feature combinations and rare form-color pairs
+            - **Diversity Penalties** - Reduces scores for too-similar colonies to encourage variety
             
             #### **Section 11: Top Colony Visualization**
             Draws colored outlines around the highest-scoring colonies on the full dish and zooms in on each:
@@ -291,26 +291,26 @@ def main():
             ### Parameter Guide
             
             #### **Image Processing Parameters**
-            - **bilateral filter diameter** - Pixel neighborhood size for noise reduction (3-21, default 9)
-            - **bilateral sigmaColor** - Color space sigma for filtering (10-150, default 75)
-            - **bilateral sigmaSpace** - Coordinate space sigma (10-150, default 75)
-            - **CLAHE clip limit** - Contrast enhancement strength (1-10, default 3)
-            - **CLAHE tile grid** - Local enhancement grid size (2-32, default 8)
-            - **gamma correction** - Brightness adjustment (0.5-2.5, default 1.2)
-            - **sharpen strength** - Edge enhancement intensity (0-2, default 1.0)
+            - **Bilateral Filter Diameter** - Pixel neighborhood size for noise reduction (3-21, default 9)
+            - **Bilateral SigmaColor** - Color space sigma for filtering (10-150, default 75)
+            - **Bilateral SigmaSpace** - Coordinate space sigma (10-150, default 75)
+            - **CLAHE Clip Limit** - Contrast enhancement strength (1-10, default 3)
+            - **CLAHE Tile Grid** - Local enhancement grid size (2-32, default 8)
+            - **Gamma Correction** - Brightness adjustment (0.5-2.5, default 1.2)
+            - **Sharpen Strength** - Edge enhancement intensity (0-2, default 1.0)
             
             #### **Colony Detection Parameters**
-            - **plate margin percent** - Edge exclusion percentage (0.05-0.20, default 0.08)
-            - **min colony size** - Minimum area in pixels (10-50, default 15)
-            - **max colony size** - Maximum area in pixels (5000-20000, default 10000)
-            - **adaptive block size** - Threshold calculation window (11-25, must be odd, default 15)
-            - **adaptive C** - Threshold adjustment constant (1-10, default 3)
-            - **watershed min distance** - Minimum separation between peaks (5-15, default 8)
+            - **Plate Margin Percent** - Edge exclusion percentage (0.05-0.20, default 0.08)
+            - **Min Colony Size** - Minimum area in pixels (10-50, default 15)
+            - **Max Colony Size** - Maximum area in pixels (5000-20000, default 10000)
+            - **Adaptive Block Size** - Threshold calculation window (11-25, must be odd, default 15)
+            - **Adaptive C** - Threshold adjustment constant (1-10, default 3)
+            - **Watershed Min Distance** - Minimum separation between peaks (5-15, default 8)
             
             #### **Advanced Options**
-            - **color clustering** - Number of color groups (0=auto, 1-10)
-            - **scoring weights** - Penalty factor for diversity (0-1, default 0.5)
-            - **display settings** - Number of top colonies to show (1-50, default 20)
+            - **Color Clustering** - Number of color groups (0=auto, 1-10)
+            - **Scoring Weights** - Penalty factor for diversity (0-1, default 0.5)
+            - **Display Settings** - Number of top colonies to show (1-50, default 20)
             
             ### Technical Implementation Notes
             - Uses reproducible random seeds (42) for consistent k-means results
