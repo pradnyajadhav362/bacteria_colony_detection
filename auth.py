@@ -120,28 +120,28 @@ def authenticate():
 
 
     if not st.session_state.authenticated:
-        st.title("bacterial colony analyzer")
-        st.write("choose how to sign in:")
+        st.title("Bacterial Colony Analyzer")
+        st.write("Choose how to sign in:")
         
         st.markdown("---")
         
         # login options tabs
-        tab1, tab2 = st.tabs(["🔐 google sign-in", "✉️ email login"])
+        tab1, tab2 = st.tabs(["Google Sign-In", "Email Login"])
         
         with tab1:
-            st.write("sign in with your google account")
+            st.write("Sign in with your Google account")
             
             # simple mock google signin that doesn't need oauth
-            st.info("🔐 simplified google sign-in (no oauth setup required)")
+            st.info("Simplified Google sign-in (no OAuth setup required)")
             
             with st.form("google_login_form"):
                 col1, col2 = st.columns([1, 3])
                 with col1:
                     st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png", width=60)
                 with col2:
-                    google_email = st.text_input("google email:", placeholder="yourname@gmail.com")
+                    google_email = st.text_input("Google email:", placeholder="yourname@gmail.com")
                 
-                google_submit = st.form_submit_button("🔑 continue with google", type="primary")
+                google_submit = st.form_submit_button("Continue with Google", type="primary")
                 
                 if google_submit:
                     if google_email and "@" in google_email:
@@ -156,20 +156,20 @@ def authenticate():
                         st.session_state.user_email = google_email
                         st.session_state.user_name = f"{name} (Google)"
                         
-                        st.success(f"welcome back, {name}!")
+                        st.success(f"Welcome back, {name}!")
                         st.rerun()
                     else:
-                        st.error("please enter a valid google email address")
+                        st.error("Please enter a valid Google email address")
         
         with tab2:
-            st.write("enter any email address to access the app")
-            st.write("we track usage for analytics but all emails are welcome")
+            st.write("Enter any email address to access the app")
+            st.write("We track usage for analytics but all emails are welcome")
             
             # simple email form
             with st.form("login_form"):
-                email = st.text_input("your email address:", placeholder="name@company.com")
-                name = st.text_input("your name (optional):", placeholder="john doe")
-                submitted = st.form_submit_button("enter app")
+                email = st.text_input("Your email address:", placeholder="name@company.com")
+                name = st.text_input("Your name (optional):", placeholder="John Doe")
+                submitted = st.form_submit_button("Enter App")
                 
                 if submitted:
                     if email and "@" in email:
@@ -181,10 +181,10 @@ def authenticate():
                         st.session_state.user_email = email
                         st.session_state.user_name = name or email.split("@")[0]
                         
-                        st.success(f"welcome, {st.session_state.user_name}!")
+                        st.success(f"Welcome, {st.session_state.user_name}!")
                         st.rerun()
                     else:
-                        st.error("please enter a valid email address")
+                        st.error("Please enter a valid email address")
         
         st.stop()
     
@@ -215,7 +215,7 @@ def show_user_info():
             if st.sidebar.button("view full log"):
                 st.sidebar.write("check local_files/user_access_log.json")
         
-        if st.sidebar.button("🚪 logout"):
+        if st.sidebar.button("Logout"):
             for key in ['authenticated', 'user_email', 'user_name']:
                 if key in st.session_state:
                     del st.session_state[key]
