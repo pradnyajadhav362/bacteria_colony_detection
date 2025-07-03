@@ -1,20 +1,11 @@
-# auth.py - Google OAuth Authentication
-# secure google sign-in for streamlit app
+# auth.py - simplified authentication
+# google-style sign-in and email login for streamlit app
 
 import streamlit as st
 import os
 from typing import List
 import json
 from datetime import datetime
-
-try:
-    from google.auth.transport.requests import Request
-    from google.oauth2.credentials import Credentials
-    from google_auth_oauthlib.flow import Flow
-    import google.auth
-except ImportError:
-    st.error("google auth libraries not installed. run: pip install google-auth google-auth-oauthlib")
-    st.stop()
 
 def get_allowed_emails() -> List[str]:
     # get list of allowed email addresses
@@ -57,32 +48,7 @@ def get_allowed_emails() -> List[str]:
     
     return []
 
-def google_oauth_flow():
-    # simplified google oauth for streamlit
-    client_id = os.getenv("GOOGLE_CLIENT_ID") or st.secrets.get("google", {}).get("client_id", "")
-    client_secret = os.getenv("GOOGLE_CLIENT_SECRET") or st.secrets.get("google", {}).get("client_secret", "")
-    
-    if not client_id or not client_secret:
-        st.error("google oauth not configured. need GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET")
-        st.info("get these from google cloud console")
-        return None
-    
-    # create oauth flow
-    flow = Flow.from_client_config(
-        {
-            "web": {
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": ["http://localhost:8501"]
-            }
-        },
-        scopes=["openid", "email", "profile"]
-    )
-    
-    flow.redirect_uri = "http://localhost:8501"
-    return flow
+
 
 def log_user_access(email: str, name: str = ""):
     # log user access to local file for tracking
@@ -143,16 +109,19 @@ def get_user_stats():
     
     return {"total_logins": 0, "unique_users": 0, "recent_users": []}
 
+
+
 def authenticate():
     # simple email authentication that accepts any email
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
         st.session_state.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     
+
+
     if not st.session_state.authenticated:
         st.title("bacterial colony analyzer")
-        st.write("enter your email to access the app")
-        st.write("we track usage for analytics but all emails are welcome")
+        st.write("choose how to sign in:")
         
         # show usage stats
         stats = get_user_stats()
@@ -169,26 +138,66 @@ def authenticate():
         
         st.markdown("---")
         
-        # simple email form
-        with st.form("login_form"):
-            email = st.text_input("your email address:", placeholder="name@company.com")
-            name = st.text_input("your name (optional):", placeholder="john doe")
-            submitted = st.form_submit_button("enter app")
+        # login options tabs
+        tab1, tab2 = st.tabs(["🔐 google sign-in", "✉️ email login"])
+        
+        with tab1:
+            st.write("sign in with your google account")
             
-            if submitted:
-                if email and "@" in email:
-                    # log the access
-                    log_user_access(email, name)
-                    
-                    # set session state
-                    st.session_state.authenticated = True
-                    st.session_state.user_email = email
-                    st.session_state.user_name = name or email.split("@")[0]
-                    
-                    st.success(f"welcome, {st.session_state.user_name}!")
-                    st.rerun()
-                else:
-                    st.error("please enter a valid email address")
+            # simple mock google signin that doesn't need oauth
+            st.info("🔐 simplified google sign-in (no oauth setup required)")
+            
+            with st.form("google_login_form"):
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png", width=60)
+                with col2:
+                    google_email = st.text_input("google email:", placeholder="yourname@gmail.com")
+                
+                google_submit = st.form_submit_button("🔑 continue with google", type="primary")
+                
+                if google_submit:
+                    if google_email and "@" in google_email:
+                        # extract name from email
+                        name = google_email.split("@")[0].replace(".", " ").title()
+                        
+                        # log the access
+                        log_user_access(google_email, f"{name} (Google)")
+                        
+                        # set session state
+                        st.session_state.authenticated = True
+                        st.session_state.user_email = google_email
+                        st.session_state.user_name = f"{name} (Google)"
+                        
+                        st.success(f"welcome back, {name}!")
+                        st.rerun()
+                    else:
+                        st.error("please enter a valid google email address")
+        
+        with tab2:
+            st.write("enter any email address to access the app")
+            st.write("we track usage for analytics but all emails are welcome")
+            
+            # simple email form
+            with st.form("login_form"):
+                email = st.text_input("your email address:", placeholder="name@company.com")
+                name = st.text_input("your name (optional):", placeholder="john doe")
+                submitted = st.form_submit_button("enter app")
+                
+                if submitted:
+                    if email and "@" in email:
+                        # log the access
+                        log_user_access(email, name)
+                        
+                        # set session state
+                        st.session_state.authenticated = True
+                        st.session_state.user_email = email
+                        st.session_state.user_name = name or email.split("@")[0]
+                        
+                        st.success(f"welcome, {st.session_state.user_name}!")
+                        st.rerun()
+                    else:
+                        st.error("please enter a valid email address")
         
         st.stop()
     
