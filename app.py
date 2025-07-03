@@ -156,28 +156,28 @@ def main():
             ### Core Packages & Their Purpose
             
             #### **Image Processing**
-            - **OpenCV** (`cv2`) - core image operations, bilateral filtering, contour detection, morphological operations
-            - **scikit-image** (`skimage`) - advanced segmentation, watershed algorithm, morphology analysis, peak detection
-            - **Pillow** (`PIL`) - image loading and basic manipulations in streamlit interface
+            - **OpenCV** (`cv2`) - Core image operations, bilateral filtering, contour detection, morphological operations
+            - **scikit-image** (`skimage`) - Advanced segmentation, watershed algorithm, morphology analysis, peak detection
+            - **Pillow** (`PIL`) - Image loading and basic manipulations in streamlit interface
             
             #### **Scientific Computing** 
-            - **NumPy** (`numpy`) - array operations, mathematical computations, distance calculations
-            - **SciPy** (`scipy`) - distance transforms, morphological operations, texture analysis
-            - **pandas** - data organization, analysis results storage, dataframe operations
+            - **NumPy** (`numpy`) - Array operations, mathematical computations, distance calculations
+            - **SciPy** (`scipy`) - Distance transforms, morphological operations, texture analysis
+            - **pandas** - Data organization, analysis results storage, dataframe operations
             
             #### **Machine Learning**
-            - **scikit-learn** (`sklearn`) - k-means clustering for color analysis, standardscaler for data normalization
-            - **KMeans clustering** - groups colonies by color similarity using lab color space
-            - **DBSCAN** - alternative clustering method for density-based grouping
+            - **scikit-learn** (`sklearn`) - K-means clustering for color analysis, standardscaler for data normalization
+            - **KMeans clustering** - Groups colonies by color similarity using lab color space
+            - **DBSCAN** - Alternative clustering method for density-based grouping
             
             #### **Visualization**
-            - **Matplotlib** (`plt`) - basic plotting, image display, histograms, scatter plots
-            - **Seaborn** (`sns`) - statistical plots, distribution charts, enhanced visualizations
-            - **Plotly** (`px`) - interactive charts, 3d visualizations, pie charts
+            - **Matplotlib** (`plt`) - Basic plotting, image display, histograms, scatter plots
+            - **Seaborn** (`sns`) - Statistical plots, distribution charts, enhanced visualizations
+            - **Plotly** (`px`) - Interactive charts, 3d visualizations, pie charts
             
             #### **Web Interface**
-            - **Streamlit** (`st`) - creates this interactive web app with file upload and parameter controls
-            - **Authentication system** - email-based login with usage tracking and admin analytics
+            - **Streamlit** (`st`) - Creates this interactive web app with file upload and parameter controls
+            - **Authentication system** - Email-based login with usage tracking and admin analytics
             
             ### Complete 12-Step Analysis Pipeline
             
@@ -203,20 +203,20 @@ def main():
             - Finds largest contour in inner area and combines with inner margin for final mask
             
             #### **Section 6: Colony Segmentation**
-            - **adaptive thresholding** - separates colonies from background using cv2.adaptiveThreshold with ADAPTIVE_THRESH_GAUSSIAN_C
-            - **morphological operations** - cleans up detected regions using opening and closing operations
-            - **watershed algorithm** - separates touching/overlapping colonies using scipy.ndimage.distance_transform_edt and skimage.segmentation.watershed
-            - **size filtering** - removes artifacts by filtering colonies between min_size=15 and max_size=10000 pixels
+            - **adaptive thresholding** - Separates colonies from background using cv2.adaptiveThreshold with ADAPTIVE_THRESH_GAUSSIAN_C
+            - **morphological operations** - Cleans up detected regions using opening and closing operations
+            - **watershed algorithm** - Separates touching/overlapping colonies using scipy.ndimage.distance_transform_edt and skimage.segmentation.watershed
+            - **size filtering** - Removes artifacts by filtering colonies between min_size=15 and max_size=10000 pixels
             
             #### **Section 7: Morphology Analysis**
             Measures size, roundness, elongation, solidity, and classifies edge style and form for every colony:
-            - **area & perimeter** - basic size measurements from regionprops
-            - **circularity** - calculated as 4*π*area/perimeter² to measure roundness
-            - **aspect ratio** - major_axis/minor_axis to measure elongation
-            - **solidity** - measures how well-filled the colony shape is
-            - **convexity** - measures edge smoothness by comparing area to convex hull area
-            - **margin classification** - categorizes edge types (entire, undulate, lobate, serrate) based on convexity and complexity
-            - **form classification** - categorizes overall shape (circular, oval, irregular, filamentous) based on circularity and aspect ratio
+            - **area & perimeter** - Basic size measurements from regionprops
+            - **circularity** - Calculated as 4*π*area/perimeter² to measure roundness
+            - **aspect ratio** - Major_axis/minor_axis to measure elongation
+            - **solidity** - Measures how well-filled the colony shape is
+            - **convexity** - Measures edge smoothness by comparing area to convex hull area
+            - **margin classification** - Categorizes edge types (entire, undulate, lobate, serrate) based on convexity and complexity
+            - **form classification** - Categorizes overall shape (circular, oval, irregular, filamentous) based on circularity and aspect ratio
             
             #### **Section 8: Color Analysis**
             Extracts each colony's dominant hue, converts to lab color space, and groups similar-looking colonies:
@@ -259,58 +259,58 @@ def main():
             ### App Results & Outputs
             
             #### **Overview Tab**
-            - summary statistics (total colonies, average area, dense/circular counts)
-            - before/after image comparison showing preprocessing effects
-            - colony detection visualization with green outlines
+            - Summary statistics (total colonies, average area, dense/circular counts)
+            - Before/after image comparison showing preprocessing effects
+            - Colony detection visualization with green outlines
             
             #### **Colony Details Tab**
-            - complete morphology measurements table with sortable columns
-            - individual colony characteristics including area, circularity, form, margin
-            - filterable data for detailed analysis
+            - Complete morphology measurements table with sortable columns
+            - Individual colony characteristics including area, circularity, form, margin
+            - Filterable data for detailed analysis
             
             #### **Color Analysis Tab**
-            - color cluster distribution pie chart showing group percentages
-            - colonies colored by cluster group with distinct outline colors
-            - dominant color visualization for each detected group
+            - Color cluster distribution pie chart showing group percentages
+            - Colonies colored by cluster group with distinct outline colors
+            - Dominant color visualization for each detected group
             
             #### **Morphology Tab**
-            - shape distribution charts showing form and margin counts
-            - circularity vs area scatter plots for relationship analysis
-            - statistical breakdowns of morphological features
+            - Shape distribution charts showing form and margin counts
+            - Circularity vs area scatter plots for relationship analysis
+            - Statistical breakdowns of morphological features
             
             #### **Top Colonies Tab**
-            - highest-scoring colonies with thumbnail images
-            - detailed scoring breakdown showing individual metric contributions
-            - reasons for high interest scores with feature explanations
+            - Highest-scoring colonies with thumbnail images
+            - Detailed scoring breakdown showing individual metric contributions
+            - Reasons for high interest scores with feature explanations
             
             #### **Binary Mask Tab**
-            - raw detection mask overlay for technical validation
-            - binary view showing exactly what was detected as colonies
-            - useful for adjusting parameters and troubleshooting
+            - Raw detection mask overlay for technical validation
+            - Binary view showing exactly what was detected as colonies
+            - Useful for adjusting parameters and troubleshooting
             
             ### Parameter Guide
             
             #### **Image Processing Parameters**
-            - **bilateral filter diameter** - pixel neighborhood size for noise reduction (3-21, default 9)
-            - **bilateral sigmaColor** - color space sigma for filtering (10-150, default 75)
-            - **bilateral sigmaSpace** - coordinate space sigma (10-150, default 75)
-            - **CLAHE clip limit** - contrast enhancement strength (1-10, default 3)
-            - **CLAHE tile grid** - local enhancement grid size (2-32, default 8)
-            - **gamma correction** - brightness adjustment (0.5-2.5, default 1.2)
-            - **sharpen strength** - edge enhancement intensity (0-2, default 1.0)
+            - **bilateral filter diameter** - Pixel neighborhood size for noise reduction (3-21, default 9)
+            - **bilateral sigmaColor** - Color space sigma for filtering (10-150, default 75)
+            - **bilateral sigmaSpace** - Coordinate space sigma (10-150, default 75)
+            - **CLAHE clip limit** - Contrast enhancement strength (1-10, default 3)
+            - **CLAHE tile grid** - Local enhancement grid size (2-32, default 8)
+            - **gamma correction** - Brightness adjustment (0.5-2.5, default 1.2)
+            - **sharpen strength** - Edge enhancement intensity (0-2, default 1.0)
             
             #### **Colony Detection Parameters**
-            - **plate margin percent** - edge exclusion percentage (0.05-0.20, default 0.08)
-            - **min colony size** - minimum area in pixels (10-50, default 15)
-            - **max colony size** - maximum area in pixels (5000-20000, default 10000)
-            - **adaptive block size** - threshold calculation window (11-25, must be odd, default 15)
-            - **adaptive C** - threshold adjustment constant (1-10, default 3)
-            - **watershed min distance** - minimum separation between peaks (5-15, default 8)
+            - **plate margin percent** - Edge exclusion percentage (0.05-0.20, default 0.08)
+            - **min colony size** - Minimum area in pixels (10-50, default 15)
+            - **max colony size** - Maximum area in pixels (5000-20000, default 10000)
+            - **adaptive block size** - Threshold calculation window (11-25, must be odd, default 15)
+            - **adaptive C** - Threshold adjustment constant (1-10, default 3)
+            - **watershed min distance** - Minimum separation between peaks (5-15, default 8)
             
             #### **Advanced Options**
-            - **color clustering** - number of color groups (0=auto, 1-10)
-            - **scoring weights** - penalty factor for diversity (0-1, default 0.5)
-            - **display settings** - number of top colonies to show (1-50, default 20)
+            - **color clustering** - Number of color groups (0=auto, 1-10)
+            - **scoring weights** - Penalty factor for diversity (0-1, default 0.5)
+            - **display settings** - Number of top colonies to show (1-50, default 20)
             
             ### Technical Implementation Notes
             - Uses reproducible random seeds (42) for consistent k-means results
