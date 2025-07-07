@@ -922,12 +922,13 @@ def display_morphology_analysis(results):
             
             # download button
             form_chart_bytes = plotly_to_bytes(fig_form)
-            st.download_button(
-                label="Download Form Chart",
-                data=form_chart_bytes,
-                file_name="form_distribution.png",
-                mime="image/png"
-            )
+            if form_chart_bytes:
+                st.download_button(
+                    label="Download Form Chart",
+                    data=form_chart_bytes,
+                    file_name="form_distribution.png",
+                    mime="image/png"
+                )
         
         with col2:
             margin_counts = df['margin'].value_counts()
@@ -940,12 +941,13 @@ def display_morphology_analysis(results):
             
             # download button
             margin_chart_bytes = plotly_to_bytes(fig_margin)
-            st.download_button(
-                label="Download Margin Chart",
-                data=margin_chart_bytes,
-                file_name="margin_distribution.png",
-                mime="image/png"
-            )
+            if margin_chart_bytes:
+                st.download_button(
+                    label="Download Margin Chart",
+                    data=margin_chart_bytes,
+                    file_name="margin_distribution.png",
+                    mime="image/png"
+                )
         
         # morphology scatter plots
         st.subheader(" Morphology Relationships")
@@ -965,12 +967,13 @@ def display_morphology_analysis(results):
             
             # download button
             area_chart_bytes = plotly_to_bytes(fig_area)
-            st.download_button(
-                label="Download Area Chart",
-                data=area_chart_bytes,
-                file_name="area_vs_circularity.png",
-                mime="image/png"
-            )
+            if area_chart_bytes:
+                st.download_button(
+                    label="Download Area Chart",
+                    data=area_chart_bytes,
+                    file_name="area_vs_circularity.png",
+                    mime="image/png"
+                )
         
         with col2:
             fig_aspect = px.scatter(
@@ -985,12 +988,13 @@ def display_morphology_analysis(results):
             
             # download button
             aspect_chart_bytes = plotly_to_bytes(fig_aspect)
-            st.download_button(
-                label="Download Aspect Chart",
-                data=aspect_chart_bytes,
-                file_name="aspect_vs_solidity.png",
-                mime="image/png"
-            )
+            if aspect_chart_bytes:
+                st.download_button(
+                    label="Download Aspect Chart",
+                    data=aspect_chart_bytes,
+                    file_name="aspect_vs_solidity.png",
+                    mime="image/png"
+                )
         
         # morphology statistics
         st.subheader(" Morphology Statistics")
@@ -1030,12 +1034,13 @@ def display_top_colonies(results, n_top_colonies):
             
             # download button
             hist_bytes = plotly_to_bytes(fig_hist)
-            st.download_button(
-                label="Download Score Distribution",
-                data=hist_bytes,
-                file_name="score_distribution.png",
-                mime="image/png"
-            )
+            if hist_bytes:
+                st.download_button(
+                    label="Download Score Distribution",
+                    data=hist_bytes,
+                    file_name="score_distribution.png",
+                    mime="image/png"
+                )
         
         with col2:
             fig_scatter = px.scatter(
@@ -1051,12 +1056,13 @@ def display_top_colonies(results, n_top_colonies):
             
             # download button
             scatter_bytes = plotly_to_bytes(fig_scatter)
-            st.download_button(
-                label="Download Score Scatter Plot",
-                data=scatter_bytes,
-                file_name="area_vs_score.png",
-                mime="image/png"
-            )
+            if scatter_bytes:
+                st.download_button(
+                    label="Download Score Scatter Plot",
+                    data=scatter_bytes,
+                    file_name="area_vs_score.png",
+                    mime="image/png"
+                )
         
         # visualize top colonies on image
         st.subheader(" Top Colonies Visualization")
@@ -1536,12 +1542,13 @@ def display_pca_results(results):
     
     # download button
     pca_bytes = plotly_to_bytes(fig_pca)
-    st.download_button(
-        label="Download PCA Plot",
-        data=pca_bytes,
-        file_name="pca_analysis.png",
-        mime="image/png"
-    )
+    if pca_bytes:
+        st.download_button(
+            label="Download PCA Plot",
+            data=pca_bytes,
+            file_name="pca_analysis.png",
+            mime="image/png"
+        )
     
     # variability ranking
     st.subheader("Sample Variability Ranking")
@@ -1561,12 +1568,13 @@ def display_pca_results(results):
     
     # download button
     variance_bytes = plotly_to_bytes(fig_var)
-    st.download_button(
-        label="Download Variability Chart",
-        data=variance_bytes,
-        file_name="sample_variability.png",
-        mime="image/png"
-    )
+    if variance_bytes:
+        st.download_button(
+            label="Download Variability Chart",
+            data=variance_bytes,
+            file_name="sample_variability.png",
+            mime="image/png"
+        )
     
     st.write(f"**Most variable microbiome:** {pca_data['most_variable']}")
     st.write(f"**Least variable microbiome:** {pca_data['least_variable']}")
@@ -1637,12 +1645,13 @@ def display_colony_comparison(results):
         
         # download button for box plot
         box_bytes = plotly_to_bytes(fig_box)
-        st.download_button(
-            label="Download Box Plot",
-            data=box_bytes,
-            file_name=f"{selected_feature}_boxplot.png",
-            mime="image/png"
-        )
+        if box_bytes:
+            st.download_button(
+                label="Download Box Plot",
+                data=box_bytes,
+                file_name=f"{selected_feature}_boxplot.png",
+                mime="image/png"
+            )
         
         # violin plot
         fig_violin = px.violin(
@@ -1655,12 +1664,13 @@ def display_colony_comparison(results):
         
         # download button for violin plot
         violin_bytes = plotly_to_bytes(fig_violin)
-        st.download_button(
-            label="Download Violin Plot",
-            data=violin_bytes,
-            file_name=f"{selected_feature}_violin.png",
-            mime="image/png"
-        )
+        if violin_bytes:
+            st.download_button(
+                label="Download Violin Plot",
+                data=violin_bytes,
+                file_name=f"{selected_feature}_violin.png",
+                mime="image/png"
+            )
 
 def display_statistical_tests(results):
     # displays statistical test results between samples
