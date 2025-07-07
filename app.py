@@ -42,8 +42,12 @@ def image_to_bytes(image, format='PNG'):
 
 def plotly_to_bytes(fig, format='PNG', width=1200, height=800):
     # converts plotly figure to bytes for download
-    img_bytes = fig.to_image(format=format.lower(), width=width, height=height)
-    return img_bytes
+    try:
+        img_bytes = fig.to_image(format=format.lower(), width=width, height=height)
+        return img_bytes
+    except Exception as e:
+        st.error(f"Could not export chart: {e}. Please install kaleido: pip install kaleido")
+        return None
 
 def matplotlib_to_bytes(fig, format='PNG', dpi=150):
     # converts matplotlib figure to bytes for download
@@ -853,12 +857,13 @@ def display_color_analysis(results):
             
             # download button for pie chart
             pie_chart_bytes = plotly_to_bytes(fig)
-            st.download_button(
-                label="Download Color Distribution Chart",
-                data=pie_chart_bytes,
-                file_name="color_distribution.png",
-                mime="image/png"
-            )
+            if pie_chart_bytes:
+                st.download_button(
+                    label="Download Color Distribution Chart",
+                    data=pie_chart_bytes,
+                    file_name="color_distribution.png",
+                    mime="image/png"
+                )
         
         # color visualization
         st.subheader(" Colony Colors by Cluster")
