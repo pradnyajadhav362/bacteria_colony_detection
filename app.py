@@ -108,7 +108,7 @@ def display_run_history():
     for i, run in enumerate(reversed(st.session_state.run_history)):
         run_id = run['run_id']
         
-        with st.expander(f"🔬 Run {run_id} - {run['timestamp']} ({run['colony_count']} colonies)", 
+        with st.expander(f"Run {run_id} - {run['timestamp']} ({run['colony_count']} colonies)", 
                         expanded=(i == 0)):  # Latest run expanded by default
             
             col1, col2, col3 = st.columns([2, 2, 1])
@@ -158,7 +158,7 @@ def display_run_history():
                 if results and 'combined_df' in results and not results['combined_df'].empty:
                     csv_data = results['combined_df'].to_csv(index=False)
                     st.download_button(
-                        label=f"📊 CSV",
+                        label="CSV Data",
                         data=csv_data,
                         file_name=f"run_{run_id}_analysis.csv",
                         mime="text/csv",
@@ -169,7 +169,7 @@ def display_run_history():
                 if results and 'original_image' in results:
                     img_bytes = image_to_bytes(results['original_image'])
                     st.download_button(
-                        label=f"🖼️ Original",
+                        label="Original Image",
                         data=img_bytes,
                         file_name=f"run_{run_id}_original.png",
                         mime="image/png",
@@ -180,7 +180,7 @@ def display_run_history():
                 if results and 'processed_image' in results:
                     img_bytes = image_to_bytes(results['processed_image'])
                     st.download_button(
-                        label=f"🔬 Processed",
+                        label="Processed Image",
                         data=img_bytes,
                         file_name=f"run_{run_id}_processed.png",
                         mime="image/png",
@@ -190,7 +190,7 @@ def display_run_history():
                 # Parameters JSON download
                 params_json = json.dumps(run['parameters'], indent=2)
                 st.download_button(
-                    label=f"⚙️ Parameters",
+                    label="Parameters",
                     data=params_json,
                     file_name=f"run_{run_id}_parameters.json",
                     mime="application/json",
@@ -204,7 +204,7 @@ def display_run_history():
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("📋 Export All Run Data"):
+            if st.button("Export All Run Data"):
                 # Create comprehensive export of all runs
                 all_data = []
                 for run in st.session_state.run_history:
@@ -229,7 +229,7 @@ def display_run_history():
                 )
         
         with col2:
-            if st.button("🗑️ Clear Run History"):
+            if st.button("Clear Run History"):
                 st.session_state.run_history = []
                 st.session_state.current_run_id = 0
                 st.success("Run history cleared!")
