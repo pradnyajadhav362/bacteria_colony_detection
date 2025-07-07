@@ -107,7 +107,7 @@ def main():
         if analysis_mode == "Single Image Analysis":
             st.header("Upload Image")
             
-            uploaded_file = st.file_uploader("", 
+            uploaded_file = st.file_uploader("Upload petri dish image", 
                                             type=['png', 'jpg', 'jpeg'],
                                             label_visibility="hidden")
             
