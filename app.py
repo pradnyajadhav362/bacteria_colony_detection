@@ -22,6 +22,36 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# helper functions for downloading images and charts
+def create_download_link(data, filename, mime_type):
+    # creates a download link for any file type
+    b64 = base64.b64encode(data).decode()
+    href = f'<a href="data:{mime_type};base64,{b64}" download="{filename}">Download {filename}</a>'
+    return href
+
+def image_to_bytes(image, format='PNG'):
+    # converts numpy array or PIL image to bytes for download
+    if isinstance(image, np.ndarray):
+        if len(image.shape) == 3 and image.shape[2] == 3:
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        image = Image.fromarray(image)
+    
+    buf = io.BytesIO()
+    image.save(buf, format=format)
+    return buf.getvalue()
+
+def plotly_to_bytes(fig, format='PNG', width=1200, height=800):
+    # converts plotly figure to bytes for download
+    img_bytes = fig.to_image(format=format.lower(), width=width, height=height)
+    return img_bytes
+
+def matplotlib_to_bytes(fig, format='PNG', dpi=150):
+    # converts matplotlib figure to bytes for download
+    buf = io.BytesIO()
+    fig.savefig(buf, format=format.lower(), dpi=dpi, bbox_inches='tight')
+    buf.seek(0)
+    return buf.getvalue()
+
 # Add custom CSS to improve file uploader appearance
 st.markdown("""
 <style>
@@ -662,10 +692,26 @@ def display_overview(results):
     with col1:
         st.markdown("**Original Image**")
         st.image(results['original_image'])
+        # download button
+        original_bytes = image_to_bytes(results['original_image'])
+        st.download_button(
+            label="Download Original Image",
+            data=original_bytes,
+            file_name="original_image.png",
+            mime="image/png"
+        )
     
     with col2:
         st.markdown("**Processed Image**")
         st.image(results['processed_image'])
+        # download button  
+        processed_bytes = image_to_bytes(results['processed_image'])
+        st.download_button(
+            label="Download Processed Image",
+            data=processed_bytes,
+            file_name="processed_image.png",
+            mime="image/png"
+        )
     
     # colony detection visualization
     st.subheader("Colony Detection")
@@ -678,6 +724,15 @@ def display_overview(results):
         cv2.drawContours(colony_viz, contours, -1, (0, 255, 0), 2)
     
     st.image(colony_viz, caption="Detected colonies highlighted in green")
+    
+    # download button for colony detection
+    colony_viz_bytes = image_to_bytes(colony_viz)
+    st.download_button(
+        label="Download Colony Detection Image",
+        data=colony_viz_bytes,
+        file_name="colony_detection.png",
+        mime="image/png"
+    )
 
 def display_colony_details(results):
     # display detailed colony information in tables
@@ -731,14 +786,45 @@ def display_colony_details(results):
             hide_index=True
         )
         
-        # download button
-        csv = filtered_df.to_csv(index=False)
-        st.download_button(
-            label=" Download CSV",
-            data=csv,
-            file_name="colony_analysis_results.csv",
-            mime="text/csv"
-        )
+        # download buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            csv = filtered_df.to_csv(index=False)
+            st.download_button(
+                label=" Download CSV",
+                data=csv,
+                file_name="colony_analysis_results.csv",
+                mime="text/csv"
+            )
+        
+        with col2:
+            # create summary report
+            summary_text = f"""Bacterial Colony Analysis Report
+Generated: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+ANALYSIS SUMMARY:
+- Total Colonies Detected: {len(results['colony_properties'])}
+- Colonies in Filtered View: {len(filtered_df)}
+- Average Colony Area: {np.mean([prop.area for prop in results['colony_properties']]):.1f} pixels²
+
+MORPHOLOGY DISTRIBUTION:
+{filtered_df['form'].value_counts().to_string() if 'form' in filtered_df else 'No form data available'}
+
+COLOR CLUSTERS:
+{len(set(filtered_df['color_cluster'])) if 'color_cluster' in filtered_df else 'No color data'} distinct color groups detected
+
+DENSITY ANALYSIS:
+{filtered_df['density_class'].value_counts().to_string() if 'density_class' in filtered_df else 'No density data available'}
+
+TOP SCORING COLONIES:
+{results['top_colonies'][['colony_id', 'bio_interest', 'form']].head(10).to_string(index=False) if 'top_colonies' in results and not results['top_colonies'].empty else 'No scoring data available'}
+"""
+            st.download_button(
+                label=" Download Report",
+                data=summary_text,
+                file_name="analysis_report.txt",
+                mime="text/plain"
+            )
     
     else:
         st.warning("No colony data available")
@@ -764,6 +850,15 @@ def display_color_analysis(results):
                 title="Color Cluster Distribution"
             )
             st.plotly_chart(fig, use_container_width=True)
+            
+            # download button for pie chart
+            pie_chart_bytes = plotly_to_bytes(fig)
+            st.download_button(
+                label="Download Color Distribution Chart",
+                data=pie_chart_bytes,
+                file_name="color_distribution.png",
+                mime="image/png"
+            )
         
         # color visualization
         st.subheader(" Colony Colors by Cluster")
@@ -787,6 +882,15 @@ def display_color_analysis(results):
                             break
             
             st.image(color_viz, caption="Colonies colored by cluster")
+            
+            # download button for color visualization
+            color_viz_bytes = image_to_bytes(color_viz)
+            st.download_button(
+                label="Download Color Cluster Image",
+                data=color_viz_bytes,
+                file_name="color_clusters.png",
+                mime="image/png"
+            )
     
     else:
         st.warning("No color analysis data available")
@@ -803,22 +907,40 @@ def display_morphology_analysis(results):
         
         with col1:
             form_counts = df['form'].value_counts()
-            fig = px.bar(
+            fig_form = px.bar(
                 x=form_counts.index,
                 y=form_counts.values,
                 title="Colony Form Distribution",
                 labels={'x': 'Form', 'y': 'Count'}
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig_form, use_container_width=True)
+            
+            # download button
+            form_chart_bytes = plotly_to_bytes(fig_form)
+            st.download_button(
+                label="Download Form Chart",
+                data=form_chart_bytes,
+                file_name="form_distribution.png",
+                mime="image/png"
+            )
         
         with col2:
             margin_counts = df['margin'].value_counts()
-            fig = px.pie(
+            fig_margin = px.pie(
                 values=margin_counts.values,
                 names=margin_counts.index,
                 title="Margin Type Distribution"
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig_margin, use_container_width=True)
+            
+            # download button
+            margin_chart_bytes = plotly_to_bytes(fig_margin)
+            st.download_button(
+                label="Download Margin Chart",
+                data=margin_chart_bytes,
+                file_name="margin_distribution.png",
+                mime="image/png"
+            )
         
         # morphology scatter plots
         st.subheader(" Morphology Relationships")
@@ -826,7 +948,7 @@ def display_morphology_analysis(results):
         col1, col2 = st.columns(2)
         
         with col1:
-            fig = px.scatter(
+            fig_area = px.scatter(
                 df,
                 x='area',
                 y='circularity',
@@ -834,10 +956,19 @@ def display_morphology_analysis(results):
                 title="Area vs Circularity",
                 labels={'area': 'Area (pixels²)', 'circularity': 'Circularity'}
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig_area, use_container_width=True)
+            
+            # download button
+            area_chart_bytes = plotly_to_bytes(fig_area)
+            st.download_button(
+                label="Download Area Chart",
+                data=area_chart_bytes,
+                file_name="area_vs_circularity.png",
+                mime="image/png"
+            )
         
         with col2:
-            fig = px.scatter(
+            fig_aspect = px.scatter(
                 df,
                 x='aspect_ratio',
                 y='solidity',
@@ -845,7 +976,16 @@ def display_morphology_analysis(results):
                 title="Aspect Ratio vs Solidity",
                 labels={'aspect_ratio': 'Aspect Ratio', 'solidity': 'Solidity'}
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig_aspect, use_container_width=True)
+            
+            # download button
+            aspect_chart_bytes = plotly_to_bytes(fig_aspect)
+            st.download_button(
+                label="Download Aspect Chart",
+                data=aspect_chart_bytes,
+                file_name="aspect_vs_solidity.png",
+                mime="image/png"
+            )
         
         # morphology statistics
         st.subheader(" Morphology Statistics")
@@ -875,16 +1015,25 @@ def display_top_colonies(results, n_top_colonies):
         col1, col2 = st.columns(2)
         
         with col1:
-            fig = px.histogram(
+            fig_hist = px.histogram(
                 top_df,
                 x='bio_interest',
                 title="Interest Score Distribution",
                 labels={'bio_interest': 'Interest Score', 'count': 'Count'}
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig_hist, use_container_width=True)
+            
+            # download button
+            hist_bytes = plotly_to_bytes(fig_hist)
+            st.download_button(
+                label="Download Score Distribution",
+                data=hist_bytes,
+                file_name="score_distribution.png",
+                mime="image/png"
+            )
         
         with col2:
-            fig = px.scatter(
+            fig_scatter = px.scatter(
                 top_df,
                 x='area',
                 y='bio_interest',
@@ -893,7 +1042,16 @@ def display_top_colonies(results, n_top_colonies):
                 title="Area vs Interest Score",
                 labels={'area': 'Area (pixels²)', 'bio_interest': 'Interest Score'}
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig_scatter, use_container_width=True)
+            
+            # download button
+            scatter_bytes = plotly_to_bytes(fig_scatter)
+            st.download_button(
+                label="Download Score Scatter Plot",
+                data=scatter_bytes,
+                file_name="area_vs_score.png",
+                mime="image/png"
+            )
         
         # visualize top colonies on image
         st.subheader(" Top Colonies Visualization")
@@ -932,6 +1090,15 @@ def display_top_colonies(results, n_top_colonies):
                                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 0), 3)
                 
                 st.image(marked_image, caption="Top colonies highlighted with rankings")
+                
+                # download button for marked image
+                marked_bytes = image_to_bytes(marked_image)
+                st.download_button(
+                    label="Download Highlighted Image",
+                    data=marked_bytes,
+                    file_name="top_colonies_highlighted.png",
+                    mime="image/png"
+                )
             
             # Individual zoomed views of top colonies
             st.subheader(" Zoomed Views of Top Colonies")
@@ -998,6 +1165,15 @@ def display_binary_mask(results, n_top_colonies):
     if 'final_binary_mask' in results and results['final_binary_mask'] is not None:
         st.image(results['final_binary_mask'], caption="Final binary mask (colonies=white)")
         
+        # download button for binary mask
+        mask_bytes = image_to_bytes(results['final_binary_mask'])
+        st.download_button(
+            label="Download Binary Mask",
+            data=mask_bytes,
+            file_name="binary_mask.png",
+            mime="image/png"
+        )
+        
         # Optionally overlay a grid
         import cv2
         import numpy as np
@@ -1010,6 +1186,15 @@ def display_binary_mask(results, n_top_colonies):
         for y in range(0, h, grid_spacing):
             cv2.line(grid_img, (0, y), (w, y), (200, 200, 200), 1)
         st.image(grid_img, caption="Binary mask with grid overlay")
+        
+        # download button for grid overlay
+        grid_bytes = image_to_bytes(grid_img)
+        st.download_button(
+            label="Download Grid Overlay",
+            data=grid_bytes,
+            file_name="binary_mask_with_grid.png",
+            mime="image/png"
+        )
         
         # Show top colonies highlighted on binary mask
         if 'top_colonies' in results and not results['top_colonies'].empty:
@@ -1040,6 +1225,15 @@ def display_binary_mask(results, n_top_colonies):
                                 1.5, color, 4)
             
             st.image(highlighted_mask, caption="top colonies highlighted")
+            
+            # download button for highlighted mask
+            highlighted_bytes = image_to_bytes(highlighted_mask)
+            st.download_button(
+                label="Download Highlighted Mask",
+                data=highlighted_bytes,
+                file_name="highlighted_binary_mask.png",
+                mime="image/png"
+            )
         
         # Show zoomed views of top colonies on binary mask
         if 'top_colonies' in results and not results['top_colonies'].empty:
@@ -1325,7 +1519,7 @@ def display_pca_results(results):
     
     # pca scatter plot
     st.subheader("PCA Scatter Plot")
-    fig = px.scatter(
+    fig_pca = px.scatter(
         pca_data['pca_df'], 
         x='PC1', y='PC2', 
         color='sample',
@@ -1333,7 +1527,16 @@ def display_pca_results(results):
         labels={'PC1': f"PC1 ({pca_data['explained_variance'][0]*100:.1f}%)",
                 'PC2': f"PC2 ({pca_data['explained_variance'][1]*100:.1f}%)"}
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig_pca, use_container_width=True)
+    
+    # download button
+    pca_bytes = plotly_to_bytes(fig_pca)
+    st.download_button(
+        label="Download PCA Plot",
+        data=pca_bytes,
+        file_name="pca_analysis.png",
+        mime="image/png"
+    )
     
     # variability ranking
     st.subheader("Sample Variability Ranking")
@@ -1343,13 +1546,22 @@ def display_pca_results(results):
         columns=['Variance Score']
     ).sort_values('Variance Score', ascending=False)
     
-    fig_bar = px.bar(
+    fig_var = px.bar(
         variance_df.reset_index(),
         x='index', y='Variance Score',
         title="Microbiome Variability by Sample",
         labels={'index': 'Sample', 'Variance Score': 'Variance Score'}
     )
-    st.plotly_chart(fig_bar, use_container_width=True)
+    st.plotly_chart(fig_var, use_container_width=True)
+    
+    # download button
+    variance_bytes = plotly_to_bytes(fig_var)
+    st.download_button(
+        label="Download Variability Chart",
+        data=variance_bytes,
+        file_name="sample_variability.png",
+        mime="image/png"
+    )
     
     st.write(f"**Most variable microbiome:** {pca_data['most_variable']}")
     st.write(f"**Least variable microbiome:** {pca_data['least_variable']}")
@@ -1370,7 +1582,7 @@ def display_similarity_results(results):
     
     # similarity heatmap
     st.subheader("Sample Similarity Matrix")
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig_sim, ax = plt.subplots(figsize=(8, 6))
     sns.heatmap(
         similarity_data['similarity_matrix'], 
         annot=True, 
@@ -1379,7 +1591,16 @@ def display_similarity_results(results):
         ax=ax
     )
     ax.set_title("Pairwise Sample Similarity")
-    st.pyplot(fig)
+    st.pyplot(fig_sim)
+    
+    # download button
+    similarity_bytes = matplotlib_to_bytes(fig_sim)
+    st.download_button(
+        label="Download Similarity Matrix",
+        data=similarity_bytes,
+        file_name="similarity_matrix.png",
+        mime="image/png"
+    )
     
     # sample statistics
     st.subheader("Sample Statistics")
@@ -1401,22 +1622,40 @@ def display_colony_comparison(results):
         selected_feature = st.selectbox("Select feature to compare:", available_features)
         
         # box plot
-        fig = px.box(
+        fig_box = px.box(
             combined_df, 
             x='sample', y=selected_feature,
             title=f"{selected_feature.title()} Distribution by Sample"
         )
-        fig.update_xaxes(tickangle=45)
-        st.plotly_chart(fig, use_container_width=True)
+        fig_box.update_xaxes(tickangle=45)
+        st.plotly_chart(fig_box, use_container_width=True)
+        
+        # download button for box plot
+        box_bytes = plotly_to_bytes(fig_box)
+        st.download_button(
+            label="Download Box Plot",
+            data=box_bytes,
+            file_name=f"{selected_feature}_boxplot.png",
+            mime="image/png"
+        )
         
         # violin plot
-        fig2 = px.violin(
+        fig_violin = px.violin(
             combined_df, 
             x='sample', y=selected_feature,
             title=f"{selected_feature.title()} Density by Sample"
         )
-        fig2.update_xaxes(tickangle=45)
-        st.plotly_chart(fig2, use_container_width=True)
+        fig_violin.update_xaxes(tickangle=45)
+        st.plotly_chart(fig_violin, use_container_width=True)
+        
+        # download button for violin plot
+        violin_bytes = plotly_to_bytes(fig_violin)
+        st.download_button(
+            label="Download Violin Plot",
+            data=violin_bytes,
+            file_name=f"{selected_feature}_violin.png",
+            mime="image/png"
+        )
 
 def display_statistical_tests(results):
     # displays statistical test results between samples

@@ -8,4 +8,5 @@ seaborn
 plotly
 numpy
 scipy
-Pillow 
+Pillow
+kaleido 
