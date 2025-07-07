@@ -259,7 +259,7 @@ def main():
         
         # Add guide button in sidebar
         st.header("User Guide")
-        if st.button("Use Guide", help="Click to open the complete package guide on the right"):
+        if st.button("User Guide", help="Click to open the complete package guide on the right"):
             st.session_state.show_guide = True
         
         # Store current parameters in session state
@@ -359,7 +359,6 @@ def main():
             
             #### **Web Interface**
             - **Streamlit** (`st`) - Creates this interactive web app with file upload and parameter controls
-            - **Authentication system** - Email-based login with usage tracking and admin analytics
             
             ### Complete 12-Step Analysis Pipeline
             
