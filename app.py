@@ -356,9 +356,6 @@ def main():
             - **Seaborn** (`sns`) - Statistical plots, distribution charts, enhanced visualizations
             - **Plotly** (`px`) - Interactive charts, 3d visualizations, pie charts
             
-            #### **Web Interface**
-            - **Streamlit** (`st`) - Creates this interactive web app with file upload and parameter controls
-            
             ### Complete 12-Step Analysis Pipeline
             
             #### **Section 1: Environment Setup**
