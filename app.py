@@ -12,6 +12,8 @@ import cv2
 from PIL import Image
 import io
 import base64
+import json
+import datetime
 from colony_analyzer import ColonyAnalyzer
 from auth import init_auth
 
@@ -51,6 +53,187 @@ def matplotlib_to_bytes(fig, format='PNG', dpi=150):
     fig.savefig(buf, format=format.lower(), dpi=dpi, bbox_inches='tight')
     buf.seek(0)
     return buf.getvalue()
+
+def initialize_run_history():
+    # initialize run history in session state
+    if 'run_history' not in st.session_state:
+        st.session_state.run_history = []
+    if 'current_run_id' not in st.session_state:
+        st.session_state.current_run_id = 0
+
+def add_run_to_history(params, results, image_name):
+    # add a new run to history with parameters and results
+    initialize_run_history()
+    
+    run_id = st.session_state.current_run_id + 1
+    st.session_state.current_run_id = run_id
+    
+    run_data = {
+        'run_id': run_id,
+        'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'image_name': image_name,
+        'parameters': params.copy(),
+        'results': results,
+        'colony_count': len(results['colony_properties']) if results and 'colony_properties' in results else 0
+    }
+    
+    st.session_state.run_history.append(run_data)
+
+def get_parameter_changes(current_params, previous_params):
+    # compare parameters and return what changed
+    changes = []
+    
+    for key, current_val in current_params.items():
+        if key in previous_params:
+            prev_val = previous_params[key]
+            if current_val != prev_val:
+                changes.append(f"{key}: {prev_val} → {current_val}")
+        else:
+            changes.append(f"{key}: (new) {current_val}")
+    
+    return changes
+
+def display_run_history():
+    # display run history with parameter changes and download options
+    initialize_run_history()
+    
+    if not st.session_state.run_history:
+        st.info("No analysis runs yet. Upload an image and run analysis to start building history.")
+        return
+    
+    st.header("Analysis Run History")
+    st.caption(f"Track parameter changes and compare results across {len(st.session_state.run_history)} runs")
+    
+    # Create expandable sections for each run
+    for i, run in enumerate(reversed(st.session_state.run_history)):
+        run_id = run['run_id']
+        
+        with st.expander(f"🔬 Run {run_id} - {run['timestamp']} ({run['colony_count']} colonies)", 
+                        expanded=(i == 0)):  # Latest run expanded by default
+            
+            col1, col2, col3 = st.columns([2, 2, 1])
+            
+            with col1:
+                st.write(f"**Image:** {run['image_name']}")
+                st.write(f"**Colonies Detected:** {run['colony_count']}")
+                
+                # Show parameter changes compared to previous run
+                if i < len(st.session_state.run_history) - 1:
+                    prev_run = st.session_state.run_history[-(i+2)]  # Previous run
+                    changes = get_parameter_changes(run['parameters'], prev_run['parameters'])
+                    
+                    if changes:
+                        st.write("**Parameters Changed:**")
+                        for change in changes[:5]:  # Show first 5 changes
+                            st.write(f"• {change}")
+                        if len(changes) > 5:
+                            st.write(f"... and {len(changes) - 5} more changes")
+                    else:
+                        st.write("**No parameter changes from previous run**")
+                else:
+                    st.write("**First run - baseline parameters**")
+            
+            with col2:
+                # Key results summary
+                results = run['results']
+                if results and 'combined_df' in results and not results['combined_df'].empty:
+                    df = results['combined_df']
+                    avg_area = df['area'].mean() if 'area' in df else 0
+                    
+                    st.write("**Results Summary:**")
+                    st.write(f"• Average Colony Area: {avg_area:.1f} px²")
+                    
+                    if 'form' in df:
+                        most_common_form = df['form'].mode().iloc[0] if len(df['form'].mode()) > 0 else "N/A"
+                        st.write(f"• Most Common Form: {most_common_form}")
+                    
+                    if 'density_class' in df:
+                        dense_count = len(df[df['density_class'] == 'dense'])
+                        st.write(f"• Dense Colonies: {dense_count}")
+            
+            with col3:
+                st.write("**Downloads:**")
+                
+                # CSV download for this run
+                if results and 'combined_df' in results and not results['combined_df'].empty:
+                    csv_data = results['combined_df'].to_csv(index=False)
+                    st.download_button(
+                        label=f"📊 CSV",
+                        data=csv_data,
+                        file_name=f"run_{run_id}_analysis.csv",
+                        mime="text/csv",
+                        key=f"csv_{run_id}"
+                    )
+                
+                # Original image download
+                if results and 'original_image' in results:
+                    img_bytes = image_to_bytes(results['original_image'])
+                    st.download_button(
+                        label=f"🖼️ Original",
+                        data=img_bytes,
+                        file_name=f"run_{run_id}_original.png",
+                        mime="image/png",
+                        key=f"orig_{run_id}"
+                    )
+                
+                # Processed image download
+                if results and 'processed_image' in results:
+                    img_bytes = image_to_bytes(results['processed_image'])
+                    st.download_button(
+                        label=f"🔬 Processed",
+                        data=img_bytes,
+                        file_name=f"run_{run_id}_processed.png",
+                        mime="image/png",
+                        key=f"proc_{run_id}"
+                    )
+                
+                # Parameters JSON download
+                params_json = json.dumps(run['parameters'], indent=2)
+                st.download_button(
+                    label=f"⚙️ Parameters",
+                    data=params_json,
+                    file_name=f"run_{run_id}_parameters.json",
+                    mime="application/json",
+                    key=f"params_{run_id}"
+                )
+    
+    # Bulk operations
+    if len(st.session_state.run_history) > 1:
+        st.subheader("Bulk Operations")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📋 Export All Run Data"):
+                # Create comprehensive export of all runs
+                all_data = []
+                for run in st.session_state.run_history:
+                    run_summary = {
+                        'Run_ID': run['run_id'],
+                        'Timestamp': run['timestamp'],
+                        'Image_Name': run['image_name'],
+                        'Colony_Count': run['colony_count']
+                    }
+                    # Add key parameters
+                    run_summary.update(run['parameters'])
+                    all_data.append(run_summary)
+                
+                df_export = pd.DataFrame(all_data)
+                csv_export = df_export.to_csv(index=False)
+                
+                st.download_button(
+                    label="Download Run Comparison CSV",
+                    data=csv_export,
+                    file_name=f"all_runs_comparison_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv"
+                )
+        
+        with col2:
+            if st.button("🗑️ Clear Run History"):
+                st.session_state.run_history = []
+                st.session_state.current_run_id = 0
+                st.success("Run history cleared!")
+                st.rerun()
 
 # Add custom CSS to improve file uploader appearance
 st.markdown("""
@@ -548,6 +731,10 @@ def main():
                         # Cache the results
                         st.session_state.analysis_results = results
                         st.session_state.params = params
+                        
+                        # Add to run history
+                        if results is not None:
+                            add_run_to_history(params, results, uploaded_file.name)
                 else:
                     # Use cached results
                     results = st.session_state.analysis_results
@@ -625,13 +812,14 @@ def main():
 def display_results(results, n_top_colonies):
     # display analysis results in organized tabs
     
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "Overview", 
         "Colony Details", 
         "Color Analysis", 
         "Morphology", 
         "Top Colonies",
-        "Binary Mask & Grid"
+        "Binary Mask & Grid",
+        "Run History"
     ])
     
     with tab1:
@@ -651,6 +839,9 @@ def display_results(results, n_top_colonies):
     
     with tab6:
         display_binary_mask(results, n_top_colonies)
+    
+    with tab7:
+        display_run_history()
 
 def display_overview(results):
     # display overview statistics and key metrics
