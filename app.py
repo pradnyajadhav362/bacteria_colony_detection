@@ -41,13 +41,8 @@ def image_to_bytes(image, format='PNG'):
     return buf.getvalue()
 
 def plotly_to_bytes(fig, format='PNG', width=1200, height=800):
-    # converts plotly figure to bytes for download
-    try:
-        img_bytes = fig.to_image(format=format.lower(), width=width, height=height)
-        return img_bytes
-    except Exception as e:
-        st.error(f"Could not export chart: {e}. Please install kaleido: pip install kaleido")
-        return None
+    # converts plotly figure to bytes for download - disabled to avoid kaleido dependency
+    return None
 
 def matplotlib_to_bytes(fig, format='PNG', dpi=150):
     # converts matplotlib figure to bytes for download
