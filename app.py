@@ -32,8 +32,9 @@ def create_download_link(data, filename, mime_type):
 def image_to_bytes(image, format='PNG'):
     # converts numpy array or PIL image to bytes for download
     if isinstance(image, np.ndarray):
-        if len(image.shape) == 3 and image.shape[2] == 3:
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        # ensure correct data type for PIL
+        if image.dtype != np.uint8:
+            image = (image * 255).astype(np.uint8) if image.max() <= 1.0 else image.astype(np.uint8)
         image = Image.fromarray(image)
     
     buf = io.BytesIO()
