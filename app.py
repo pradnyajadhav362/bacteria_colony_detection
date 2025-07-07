@@ -258,7 +258,6 @@ def main():
                                           help="Measure colony opacity and texture")
         
         # Add guide button in sidebar
-        st.header("User Guide")
         if st.button("User Guide", help="Click to open the complete package guide on the right"):
             st.session_state.show_guide = True
         
