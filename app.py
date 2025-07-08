@@ -16,6 +16,7 @@ import json
 import datetime
 from colony_analyzer import ColonyAnalyzer
 from auth import init_auth
+from admin_logger import admin_logger
 
 st.set_page_config(
     page_title="Bacterial Colony Analyzer",
@@ -276,6 +277,11 @@ def main():
     # Initialize authentication
     auth = init_auth()
     
+    # Initialize session tracking
+    if 'session_id' not in st.session_state:
+        user_info = getattr(auth, 'current_user', 'anonymous')
+        st.session_state.session_id = admin_logger.generate_session_id(user_info)
+    
     st.title("Bacterial Colony Analyzer")
     st.caption("Advanced image analysis for petri dish colony detection and characterization")
     
@@ -300,6 +306,14 @@ def main():
                 # Show image preview
                 image = Image.open(uploaded_file)
                 st.image(image, caption="Preview", width=200)
+                
+                # Log upload
+                admin_logger.log_upload(
+                    st.session_state.session_id, 
+                    uploaded_file, 
+                    uploaded_file.name,
+                    getattr(auth, 'current_user', 'anonymous')
+                )
         
         else:  # Multi-Image Comparison mode
             st.header("Upload Multiple Images")
@@ -735,6 +749,13 @@ def main():
                         # Add to run history
                         if results is not None:
                             add_run_to_history(params, results, uploaded_file.name)
+                            
+                            # Log analysis for admin
+                            admin_logger.log_analysis(
+                                st.session_state.session_id,
+                                params,
+                                results
+                            )
                 else:
                     # Use cached results
                     results = st.session_state.analysis_results
@@ -880,24 +901,26 @@ def display_overview(results):
         st.image(results['original_image'])
         # download button
         original_bytes = image_to_bytes(results['original_image'])
-        st.download_button(
+        if st.download_button(
             label="Download Original Image",
             data=original_bytes,
             file_name="original_image.png",
             mime="image/png"
-        )
+        ):
+            admin_logger.log_download(st.session_state.session_id, "original_image", "original_image.png")
     
     with col2:
         st.markdown("**Processed Image**")
         st.image(results['processed_image'])
         # download button  
         processed_bytes = image_to_bytes(results['processed_image'])
-        st.download_button(
+        if st.download_button(
             label="Download Processed Image",
             data=processed_bytes,
             file_name="processed_image.png",
             mime="image/png"
-        )
+        ):
+            admin_logger.log_download(st.session_state.session_id, "processed_image", "processed_image.png")
     
     # colony detection visualization
     st.subheader("Colony Detection")

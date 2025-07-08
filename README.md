@@ -93,6 +93,23 @@ See `deploy_guide.md` for detailed deployment instructions.
 4. **Run Analysis**: Click "Run Analysis" to process
 5. **Explore Results**: View results in different tabs
 
+### Admin Dashboard
+Access comprehensive user data and analytics:
+
+```bash
+python run_admin.py
+```
+
+**Admin Features:**
+- View all user uploads and analysis results
+- Track usage statistics and colony detection metrics
+- Browse individual sessions with full details
+- Export all data for analysis or backup
+- Download original images, processed images, and colony data
+- Monitor analysis parameters and success rates
+
+**Admin Login:** Password is `admin123` (change in `admin_dashboard.py`)
+
 ### Programmatic Usage
 ```python
 from colony_analyzer import ColonyAnalyzer
