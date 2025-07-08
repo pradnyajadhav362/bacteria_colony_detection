@@ -546,9 +546,20 @@ def main():
             # Admin authentication
             admin_password = st.text_input("Admin Password", type="password", key="admin_pass")
             
-            # Get admin password from environment variable for security
+            # Get admin password from multiple sources for security
             import os
-            correct_admin_password = os.getenv('ADMIN_PASSWORD', 'default_admin_123')
+            
+            # Try to read from admin_password.txt file first (private, not in git)
+            try:
+                with open('admin_password.txt', 'r') as f:
+                    file_password = f.read().strip()
+                    if file_password and file_password != 'YourSecurePasswordHere':
+                        correct_admin_password = file_password
+                    else:
+                        correct_admin_password = os.getenv('ADMIN_PASSWORD', 'default_admin_123')
+            except FileNotFoundError:
+                # Fallback to environment variable or default
+                correct_admin_password = os.getenv('ADMIN_PASSWORD', 'default_admin_123')
             
             if admin_password == correct_admin_password:
                 st.success("Admin access granted - viewing all user data")

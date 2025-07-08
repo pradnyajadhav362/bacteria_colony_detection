@@ -1,3 +1,6 @@
+# Admin password file (keep private)
+admin_password.txt
+
 # Local files folder - contains reference materials not meant for GitHub
 local_files/
 
