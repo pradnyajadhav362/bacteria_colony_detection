@@ -281,14 +281,14 @@ def main():
     # Show group ID input if not set
     if st.session_state.user_group_id is None:
         st.title("Bacterial Colony Analyzer")
-        st.markdown("### Enter Your Identifier to Continue")
+        st.markdown("### Enter Your Group ID to Continue")
         
         col1, col2 = st.columns([2, 1])
         with col1:
             group_id = st.text_input(
-                "Group ID / Student ID / Research Group:", 
-                placeholder="e.g., Group01, Student123, Lab_A, etc.",
-                help="Enter any identifier to track your analysis sessions"
+                "Group ID:", 
+                placeholder="e.g., Group01, Group02, Group03",
+                help="Enter your group identifier"
             )
         with col2:
             if st.button("Start Analysis", type="primary"):
@@ -297,21 +297,7 @@ def main():
                     st.session_state.session_id = admin_logger.generate_session_id(group_id.strip())
                     st.rerun()
                 else:
-                    st.error("Please enter an identifier")
-        
-        st.markdown("---")
-        st.markdown("""
-        **Why is an identifier required?**
-        
-        This identifier allows the system administrator to:
-        - Track usage statistics and system performance
-        - Organize analysis results by research group or class
-        - Monitor which features are most used
-        - Provide technical support when needed
-        - Generate usage reports for institutional purposes
-        
-        Your identifier can be anything you choose - it's simply for tracking and organizational purposes.
-        """)
+                    st.error("Please enter a Group ID")
         st.stop()
     
     # Initialize session tracking with group ID
@@ -325,7 +311,7 @@ def main():
         st.caption("Advanced image analysis for petri dish colony detection and characterization")
     with col2:
         st.write(f"**User:** {st.session_state.user_group_id}")
-        if st.button("Change User", help="Switch to different identifier"):
+        if st.button("Change User", help="Switch to different Group ID"):
             st.session_state.user_group_id = None
             st.session_state.session_id = None
             st.rerun()
