@@ -30,18 +30,4 @@ A web-based image analysis tool for detecting and characterizing bacterial colon
 - Processed image overlays showing detected colonies
 - CSV export of all measurements
 
-## Requirements
-
-- Modern web browser
-- Petri dish images (JPEG, PNG formats)
-- Stable internet connection
-
-## Scientific Applications
-
-- Microbiology research
-- Laboratory quality control
-- Educational demonstrations
-- High-throughput screening
-
----
 
