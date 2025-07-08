@@ -67,13 +67,26 @@ def add_run_to_history(params, results, image_name):
     run_id = st.session_state.current_run_id + 1
     st.session_state.current_run_id = run_id
     
+    # Calculate colony count based on result type
+    colony_count = 0
+    if results:
+        if 'colony_properties' in results:
+            # Single image analysis
+            colony_count = len(results['colony_properties'])
+        elif 'total_colonies' in results:
+            # Multi-image analysis
+            colony_count = results['total_colonies']
+        elif 'combined_df' in results and not results['combined_df'].empty:
+            # Alternative multi-image format
+            colony_count = len(results['combined_df'])
+    
     run_data = {
         'run_id': run_id,
         'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'image_name': image_name,
         'parameters': params.copy(),
         'results': results,
-        'colony_count': len(results['colony_properties']) if results and 'colony_properties' in results else 0
+        'colony_count': colony_count
     }
     
     st.session_state.run_history.append(run_data)
