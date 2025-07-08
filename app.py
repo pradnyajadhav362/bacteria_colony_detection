@@ -1927,15 +1927,88 @@ def display_top_colonies_analysis(results):
     st.write(f"**Analyzing {len(combined_top_df)} top colonies from {len(all_top_colonies)} samples**")
     
     # top colonies overview
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
         st.metric("Total Top Colonies", len(combined_top_df))
     with col2:
         avg_score = combined_top_df['bio_interest'].mean() if 'bio_interest' in combined_top_df.columns else 0
         st.metric("Avg Interest Score", f"{avg_score:.3f}")
-    with col3:
-        best_sample = combined_top_df.groupby('sample')['bio_interest'].mean().idxmax() if 'bio_interest' in combined_top_df.columns else "N/A"
-        st.metric("Best Sample", best_sample)
+    
+    # distinct colonies analysis
+    st.subheader("Colony Diversity Analysis")
+    
+    # form distribution
+    if 'form' in combined_top_df.columns:
+        form_counts = combined_top_df['form'].value_counts()
+        st.write("**Form Distribution in Top Colonies:**")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.dataframe(form_counts.to_frame('Count'), use_container_width=True)
+        with col2:
+            fig_form = px.pie(
+                values=form_counts.values,
+                names=form_counts.index,
+                title="Top Colonies by Form Type"
+            )
+            st.plotly_chart(fig_form, use_container_width=True)
+    
+    # density distribution  
+    if 'density_class' in combined_top_df.columns:
+        density_counts = combined_top_df['density_class'].value_counts()
+        st.write("**Density Distribution in Top Colonies:**")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.dataframe(density_counts.to_frame('Count'), use_container_width=True)
+        with col2:
+            fig_density = px.pie(
+                values=density_counts.values,
+                names=density_counts.index,
+                title="Top Colonies by Density Class"
+            )
+            st.plotly_chart(fig_density, use_container_width=True)
+    
+    # color distribution
+    if 'color_cluster' in combined_top_df.columns:
+        color_counts = combined_top_df['color_cluster'].value_counts()
+        st.write("**Color Distribution in Top Colonies:**")
+        col1, col2 = st.columns(2)
+        with col1:
+            color_df = color_counts.to_frame('Count')
+            color_df.index = [f"Color Cluster {i}" for i in color_df.index]
+            st.dataframe(color_df, use_container_width=True)
+        with col2:
+            fig_color = px.pie(
+                values=color_counts.values,
+                names=[f"Color Cluster {i}" for i in color_counts.index],
+                title="Top Colonies by Color Cluster"
+            )
+            st.plotly_chart(fig_color, use_container_width=True)
+    
+    # cross-sample diversity comparison
+    st.subheader("Cross-Sample Diversity Comparison")
+    
+    diversity_metrics = []
+    for sample in combined_top_df['sample'].unique():
+        sample_data = combined_top_df[combined_top_df['sample'] == sample]
+        
+        metrics = {'Sample': sample, 'Colony Count': len(sample_data)}
+        
+        if 'form' in sample_data.columns:
+            metrics['Unique Forms'] = sample_data['form'].nunique()
+            metrics['Most Common Form'] = sample_data['form'].mode().iloc[0] if not sample_data['form'].mode().empty else 'N/A'
+        
+        if 'density_class' in sample_data.columns:
+            metrics['Unique Densities'] = sample_data['density_class'].nunique()
+            metrics['Most Common Density'] = sample_data['density_class'].mode().iloc[0] if not sample_data['density_class'].mode().empty else 'N/A'
+        
+        if 'color_cluster' in sample_data.columns:
+            metrics['Unique Colors'] = sample_data['color_cluster'].nunique()
+        
+        diversity_metrics.append(metrics)
+    
+    if diversity_metrics:
+        diversity_df = pd.DataFrame(diversity_metrics)
+        st.dataframe(diversity_df, use_container_width=True, hide_index=True)
     
     # feature comparison of top colonies
     st.subheader("Top Colonies Feature Comparison")
