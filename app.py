@@ -596,9 +596,15 @@ def main():
                         st.dataframe(group_stats, use_container_width=True)
                         
                         # Export data
-                        if st.button("Export All User Data"):
-                            export_path = admin_logger.export_all_data()
-                            st.success(f"All user data exported to: {export_path}")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if st.button("Export All User Data"):
+                                export_path = admin_logger.export_all_data()
+                                st.success(f"All user data exported to: {export_path}")
+                        with col2:
+                            if st.button("View User Images & Results"):
+                                st.session_state.show_user_images = True
+                                st.rerun()
                             
                         # Link to full admin dashboard
                         st.info("For advanced analytics, use the separate admin dashboard: `python3 run_admin.py`")
@@ -607,6 +613,100 @@ def main():
                 except Exception as e:
                     st.warning(f"Admin logger not available: {e}")
                     st.info("Use separate admin dashboard: `python3 run_admin.py`")
+                
+                # User images and results viewer
+                if st.session_state.get('show_user_images', False):
+                    st.markdown("---")
+                    st.subheader("User Images and Analysis Results")
+                    
+                    if st.button("Hide User Images"):
+                        st.session_state.show_user_images = False
+                        st.rerun()
+                    
+                    # Get all user uploads and results
+                    import glob
+                    import os
+                    from PIL import Image
+                    
+                    # Look for user data in admin_logs
+                    admin_logs_path = "admin_logs"
+                    if os.path.exists(admin_logs_path):
+                        sessions = []
+                        for session_dir in glob.glob(f"{admin_logs_path}/session_*"):
+                            session_id = os.path.basename(session_dir)
+                            
+                            # Get uploaded images
+                            uploads_dir = os.path.join(session_dir, "uploads")
+                            if os.path.exists(uploads_dir):
+                                for img_file in glob.glob(f"{uploads_dir}/*.png") + glob.glob(f"{uploads_dir}/*.jpg") + glob.glob(f"{uploads_dir}/*.jpeg"):
+                                    sessions.append({
+                                        'session_id': session_id,
+                                        'image_path': img_file,
+                                        'image_name': os.path.basename(img_file)
+                                    })
+                        
+                        if sessions:
+                            # Group by session
+                            st.write(f"Found {len(sessions)} uploaded images across {len(set(s['session_id'] for s in sessions))} sessions")
+                            
+                            for session_id in set(s['session_id'] for s in sessions):
+                                with st.expander(f"Session: {session_id}"):
+                                    session_images = [s for s in sessions if s['session_id'] == session_id]
+                                    
+                                    for img_data in session_images:
+                                        try:
+                                            img = Image.open(img_data['image_path'])
+                                            
+                                            col1, col2 = st.columns([1, 2])
+                                            with col1:
+                                                st.image(img, caption=f"Uploaded: {img_data['image_name']}", width=200)
+                                            
+                                            with col2:
+                                                st.write(f"**Image:** {img_data['image_name']}")
+                                                st.write(f"**Session:** {session_id}")
+                                                
+                                                # Look for analysis results
+                                                results_dir = os.path.join(admin_logs_path, session_id, "results")
+                                                if os.path.exists(results_dir):
+                                                    csv_files = glob.glob(f"{results_dir}/*.csv")
+                                                    img_files = glob.glob(f"{results_dir}/*_highlighted.png") + glob.glob(f"{results_dir}/*_analysis.png")
+                                                    
+                                                    if csv_files:
+                                                        st.write(f"**Analysis CSV:** {len(csv_files)} files available")
+                                                        for csv_file in csv_files:
+                                                            with open(csv_file, 'rb') as f:
+                                                                st.download_button(
+                                                                    f"Download {os.path.basename(csv_file)}",
+                                                                    f.read(),
+                                                                    file_name=os.path.basename(csv_file),
+                                                                    mime="text/csv"
+                                                                )
+                                                    
+                                                    if img_files:
+                                                        st.write(f"**Analysis Images:** {len(img_files)} files available")
+                                                        for result_img in img_files:
+                                                            try:
+                                                                result_image = Image.open(result_img)
+                                                                st.image(result_image, caption=f"Analysis: {os.path.basename(result_img)}", width=300)
+                                                                
+                                                                with open(result_img, 'rb') as f:
+                                                                    st.download_button(
+                                                                        f"Download {os.path.basename(result_img)}",
+                                                                        f.read(),
+                                                                        file_name=os.path.basename(result_img),
+                                                                        mime="image/png"
+                                                                    )
+                                                            except Exception as e:
+                                                                st.write(f"Could not load {result_img}: {e}")
+                                                else:
+                                                    st.write("No analysis results found for this image")
+                                                    
+                                        except Exception as e:
+                                            st.write(f"Could not load image {img_data['image_path']}: {e}")
+                        else:
+                            st.info("No user images found yet. Users need to upload images first.")
+                    else:
+                        st.info("Admin logs directory not found. Users need to upload images first.")
                     
             elif admin_password:
                 st.error("Invalid admin password")
@@ -859,6 +959,22 @@ def main():
                                 params,
                                 results
                             )
+                            
+                            # Save analysis images for admin viewing
+                            if 'marked_image' in results:
+                                admin_logger.save_analysis_image(
+                                    st.session_state.session_id,
+                                    results['marked_image'],
+                                    f"{uploaded_file.name}_highlighted.png"
+                                )
+                            
+                            # Save colony detection image
+                            if 'colony_viz' in results:
+                                admin_logger.save_analysis_image(
+                                    st.session_state.session_id,
+                                    results['colony_viz'],
+                                    f"{uploaded_file.name}_detection.png"
+                                )
                 else:
                     # Use cached results
                     results = st.session_state.analysis_results
@@ -1034,6 +1150,9 @@ def display_overview(results):
         mask = (results['colony_labels'] == prop.label).astype(np.uint8)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cv2.drawContours(colony_viz, contours, -1, (0, 255, 0), 2)
+    
+    # store for admin logging
+    results['colony_viz'] = colony_viz
     
     st.image(colony_viz, caption="Detected colonies highlighted in green")
     

@@ -38,8 +38,12 @@ class AdminLogger:
         # log uploaded image and metadata
         timestamp = datetime.datetime.now().isoformat()
         
+        # create session-specific uploads directory
+        session_uploads_dir = self.log_dir / f"session_{session_id}" / "uploads"
+        session_uploads_dir.mkdir(parents=True, exist_ok=True)
+        
         # save original image
-        upload_path = self.log_dir / "uploads" / f"{session_id}_{image_name}"
+        upload_path = session_uploads_dir / image_name
         
         # save the uploaded file
         if hasattr(image_file, 'getbuffer'):
@@ -135,6 +139,28 @@ class AdminLogger:
         }
         
         self._append_log(log_entry)
+    
+    def save_analysis_image(self, session_id, image_array, filename):
+        # save analysis result images for admin viewing
+        try:
+            from PIL import Image
+            import numpy as np
+            
+            # create session-specific results directory
+            session_results_dir = self.log_dir / f"session_{session_id}" / "results"
+            session_results_dir.mkdir(parents=True, exist_ok=True)
+            
+            # save image
+            image_path = session_results_dir / filename
+            
+            if isinstance(image_array, np.ndarray):
+                img = Image.fromarray(image_array.astype(np.uint8))
+                img.save(image_path)
+                return str(image_path)
+            
+        except Exception as e:
+            print(f"Error saving analysis image: {e}")
+            return None
     
     def _append_log(self, log_entry):
         # append entry to session log
