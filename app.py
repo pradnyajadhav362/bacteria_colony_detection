@@ -1678,11 +1678,12 @@ def display_multi_image_results(results):
             st.metric("Most Variable", most_variable)
     
     # create tabs for different analyses
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "Sample Overview",
         "PCA Analysis", 
         "Similarity Analysis",
         "Colony Comparison",
+        "Top Colonies Analysis",
         "Statistical Tests"
     ])
     
@@ -1699,6 +1700,9 @@ def display_multi_image_results(results):
         display_colony_comparison(results)
     
     with tab5:
+        display_top_colonies_analysis(results)
+    
+    with tab6:
         display_statistical_tests(results)
 
 def display_sample_overview(results):
@@ -1891,6 +1895,191 @@ def display_colony_comparison(results):
                 file_name=f"{selected_feature}_violin.png",
                 mime="image/png"
             )
+
+def display_top_colonies_analysis(results):
+    # analyzes and compares top 20 colonies across all samples
+    import plotly.express as px
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    from scipy.spatial.distance import pdist, squareform
+    from sklearn.cluster import KMeans
+    from sklearn.preprocessing import StandardScaler
+    
+    st.subheader("Top Colonies Cross-Sample Analysis")
+    
+    # extract top colonies from each sample
+    all_top_colonies = []
+    top_n = 20
+    
+    for sample_name, sample_results in results['individual_results'].items():
+        if sample_results and 'top_colonies' in sample_results and not sample_results['top_colonies'].empty:
+            top_df = sample_results['top_colonies'].head(top_n).copy()
+            top_df['sample'] = sample_name
+            all_top_colonies.append(top_df)
+    
+    if not all_top_colonies:
+        st.warning("No top colonies data available")
+        return
+    
+    # combine top colonies from all samples
+    combined_top_df = pd.concat(all_top_colonies, ignore_index=True)
+    
+    st.write(f"**Analyzing {len(combined_top_df)} top colonies from {len(all_top_colonies)} samples**")
+    
+    # top colonies overview
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Top Colonies", len(combined_top_df))
+    with col2:
+        avg_score = combined_top_df['bio_interest'].mean() if 'bio_interest' in combined_top_df.columns else 0
+        st.metric("Avg Interest Score", f"{avg_score:.3f}")
+    with col3:
+        best_sample = combined_top_df.groupby('sample')['bio_interest'].mean().idxmax() if 'bio_interest' in combined_top_df.columns else "N/A"
+        st.metric("Best Sample", best_sample)
+    
+    # feature comparison of top colonies
+    st.subheader("Top Colonies Feature Comparison")
+    
+    numeric_features = ['area', 'perimeter', 'circularity', 'aspect_ratio', 'solidity', 'bio_interest']
+    available_features = [f for f in numeric_features if f in combined_top_df.columns]
+    
+    if len(available_features) >= 2:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # box plot of top colonies by sample
+            selected_feature = st.selectbox("Select feature for comparison:", available_features, key="top_feature")
+            fig_box = px.box(
+                combined_top_df, 
+                x='sample', y=selected_feature,
+                title=f"Top 20 Colonies: {selected_feature.title()} by Sample"
+            )
+            fig_box.update_xaxes(tickangle=45)
+            st.plotly_chart(fig_box, use_container_width=True)
+        
+        with col2:
+            # scatter plot of top colonies
+            if len(available_features) >= 2:
+                feature_x = st.selectbox("X-axis feature:", available_features, index=0, key="top_x")
+                feature_y = st.selectbox("Y-axis feature:", available_features, index=1, key="top_y")
+                
+                fig_scatter = px.scatter(
+                    combined_top_df,
+                    x=feature_x, y=feature_y,
+                    color='sample',
+                    title=f"Top Colonies: {feature_x} vs {feature_y}",
+                    hover_data=['bio_interest'] if 'bio_interest' in combined_top_df.columns else None
+                )
+                st.plotly_chart(fig_scatter, use_container_width=True)
+    
+    # top colonies similarity analysis
+    st.subheader("Top Colonies Similarity Matrix")
+    
+    # calculate similarity between samples based on their top colonies
+    sample_features = {}
+    for sample in combined_top_df['sample'].unique():
+        sample_data = combined_top_df[combined_top_df['sample'] == sample]
+        if len(sample_data) > 0:
+            sample_features[sample] = {
+                'avg_area': sample_data['area'].mean() if 'area' in sample_data.columns else 0,
+                'avg_circularity': sample_data['circularity'].mean() if 'circularity' in sample_data.columns else 0,
+                'avg_bio_interest': sample_data['bio_interest'].mean() if 'bio_interest' in sample_data.columns else 0,
+                'count': len(sample_data)
+            }
+    
+    if len(sample_features) > 1:
+        # create feature matrix
+        feature_df = pd.DataFrame(sample_features).T
+        
+        # calculate pairwise distances
+        if len(feature_df.columns) > 1:
+            scaler = StandardScaler()
+            scaled_features = scaler.fit_transform(feature_df.fillna(0))
+            distances = pdist(scaled_features, metric='euclidean')
+            similarity_matrix = 1 / (1 + squareform(distances))
+            np.fill_diagonal(similarity_matrix, 1.0)
+            
+            # create heatmap
+            fig_sim, ax = plt.subplots(figsize=(8, 6))
+            sns.heatmap(
+                similarity_matrix,
+                annot=True,
+                cmap='viridis',
+                fmt='.3f',
+                xticklabels=feature_df.index,
+                yticklabels=feature_df.index,
+                ax=ax
+            )
+            ax.set_title("Top Colonies Similarity Between Samples")
+            st.pyplot(fig_sim)
+            
+            # download button
+            similarity_bytes = matplotlib_to_bytes(fig_sim)
+            st.download_button(
+                label="Download Top Colonies Similarity Matrix",
+                data=similarity_bytes,
+                file_name="top_colonies_similarity.png",
+                mime="image/png"
+            )
+    
+    # clustering analysis of top colonies
+    st.subheader("Top Colonies Clustering")
+    
+    if len(available_features) >= 3:
+        cluster_features = st.multiselect(
+            "Select features for clustering:",
+            available_features,
+            default=available_features[:3]
+        )
+        
+        if len(cluster_features) >= 2:
+            n_clusters = st.slider("Number of clusters:", 2, 8, 4)
+            
+            # prepare data for clustering
+            cluster_data = combined_top_df[cluster_features].dropna()
+            if len(cluster_data) > n_clusters:
+                scaler = StandardScaler()
+                scaled_data = scaler.fit_transform(cluster_data)
+                
+                # perform clustering
+                kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+                clusters = kmeans.fit_predict(scaled_data)
+                
+                # add cluster info to dataframe
+                cluster_df = combined_top_df.loc[cluster_data.index].copy()
+                cluster_df['cluster'] = clusters
+                
+                # visualize clusters
+                if len(cluster_features) >= 2:
+                    fig_cluster = px.scatter(
+                        cluster_df,
+                        x=cluster_features[0],
+                        y=cluster_features[1],
+                        color='cluster',
+                        symbol='sample',
+                        title=f"Top Colonies Clustering ({n_clusters} clusters)",
+                        hover_data=['sample', 'bio_interest'] if 'bio_interest' in cluster_df.columns else ['sample']
+                    )
+                    st.plotly_chart(fig_cluster, use_container_width=True)
+                    
+                    # cluster summary
+                    st.subheader("Cluster Summary")
+                    cluster_summary = cluster_df.groupby('cluster').agg({
+                        'sample': 'count',
+                        **{feature: 'mean' for feature in cluster_features}
+                    }).round(3)
+                    cluster_summary.columns = ['Colony Count'] + [f'Avg {f.title()}' for f in cluster_features]
+                    st.dataframe(cluster_summary, use_container_width=True)
+    
+    # download top colonies data
+    st.subheader("Export Top Colonies Data")
+    csv_data = combined_top_df.to_csv(index=False)
+    st.download_button(
+        label="Download Top Colonies CSV",
+        data=csv_data,
+        file_name="top_colonies_analysis.csv",
+        mime="text/csv"
+    )
 
 def display_statistical_tests(results):
     # displays statistical test results between samples
