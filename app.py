@@ -280,8 +280,8 @@ def main():
     
     # Show group ID input if not set
     if st.session_state.user_group_id is None:
-        st.title("🔬 Bacterial Colony Analyzer")
-        st.markdown("### Enter Your Group ID to Continue")
+        st.title("Bacterial Colony Analyzer")
+        st.markdown("### Enter Your Identifier to Continue")
         
         col1, col2 = st.columns([2, 1])
         with col1:
@@ -297,10 +297,21 @@ def main():
                     st.session_state.session_id = admin_logger.generate_session_id(group_id.strip())
                     st.rerun()
                 else:
-                    st.error("Please enter a Group ID")
+                    st.error("Please enter an identifier")
         
         st.markdown("---")
-        st.info("💡 **Why Group ID?** This helps track usage statistics and organize analysis results by research group or class")
+        st.markdown("""
+        **Why is an identifier required?**
+        
+        This identifier allows the system administrator to:
+        - Track usage statistics and system performance
+        - Organize analysis results by research group or class
+        - Monitor which features are most used
+        - Provide technical support when needed
+        - Generate usage reports for institutional purposes
+        
+        Your identifier can be anything you choose - it's simply for tracking and organizational purposes.
+        """)
         st.stop()
     
     # Initialize session tracking with group ID
@@ -310,11 +321,11 @@ def main():
     # Main app interface
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.title("🔬 Bacterial Colony Analyzer")
+        st.title("Bacterial Colony Analyzer")
         st.caption("Advanced image analysis for petri dish colony detection and characterization")
     with col2:
         st.write(f"**User:** {st.session_state.user_group_id}")
-        if st.button("Change User", help="Switch to different Group ID"):
+        if st.button("Change User", help="Switch to different identifier"):
             st.session_state.user_group_id = None
             st.session_state.session_id = None
             st.rerun()
