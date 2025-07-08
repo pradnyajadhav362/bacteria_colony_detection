@@ -585,9 +585,9 @@ def main():
                     st.dataframe(recent_sessions, use_container_width=True)
                     
                     # Group usage breakdown
-                    if 'user_id' in all_sessions.columns:
+                    if 'user_info' in all_sessions.columns:
                         st.subheader("Group ID Usage Statistics")
-                        group_stats = all_sessions.groupby('user_id').agg({
+                        group_stats = all_sessions.groupby('user_info').agg({
                             'total_uploads': 'sum',
                             'total_analyses': 'sum', 
                             'colony_count': 'sum',
