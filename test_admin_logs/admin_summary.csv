@@ -1,0 +1,2 @@
+session_id,timestamp,user_info,image_name,total_uploads,total_analyses,total_downloads,colony_count,analysis_successful
+23312240f071,2025-07-08T13:27:39.490678,TestGroup_A1,test_petri_dish.png,1,1,0,3.0,True

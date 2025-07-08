@@ -1,0 +1,14 @@
+{
+  "colony_count": 3,
+  "has_morphology": true,
+  "has_color_analysis": true,
+  "has_density_analysis": true,
+  "analysis_successful": true,
+  "csv_files": [
+    "admin_logs/session_68b59dc35fc5/results/colonies_complete.csv",
+    "admin_logs/session_68b59dc35fc5/results/morphology_analysis.csv",
+    "admin_logs/session_68b59dc35fc5/results/color_analysis.csv",
+    "admin_logs/session_68b59dc35fc5/results/density_analysis.csv",
+    "admin_logs/session_68b59dc35fc5/results/top_colonies.csv"
+  ]
+}

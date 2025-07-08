@@ -1,0 +1,6 @@
+{
+  "bilateral_d": 9,
+  "gamma": 1.2,
+  "min_colony_size": 15,
+  "n_top_colonies": 20
+}

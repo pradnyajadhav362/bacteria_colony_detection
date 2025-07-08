@@ -1,0 +1,5 @@
+colony_id,density_score,density_class
+1,0.7,dense
+2,0.75,moderate
+3,0.7999999999999999,dense
+4,0.85,moderate
