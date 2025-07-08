@@ -59,6 +59,15 @@ def initialize_run_history():
         st.session_state.run_history = []
     if 'current_run_id' not in st.session_state:
         st.session_state.current_run_id = 0
+    
+    # Fix existing multi-image runs with incorrect colony counts
+    for run in st.session_state.run_history:
+        if run.get('colony_count', 0) == 0 and run.get('results'):
+            results = run['results']
+            if 'total_colonies' in results:
+                run['colony_count'] = results['total_colonies']
+            elif 'combined_df' in results and not results['combined_df'].empty:
+                run['colony_count'] = len(results['combined_df'])
 
 def add_run_to_history(params, results, image_name):
     # add a new run to history with parameters and results
