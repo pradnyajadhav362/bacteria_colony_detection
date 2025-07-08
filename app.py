@@ -287,7 +287,7 @@ def main():
         with col1:
             group_id = st.text_input(
                 "Group ID:", 
-                placeholder="e.g., Group01, Group02, Group03",
+                placeholder="Group01",
                 help="Enter your group identifier"
             )
         with col2:
