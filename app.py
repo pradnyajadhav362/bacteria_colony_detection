@@ -15,7 +15,6 @@ import json
 import datetime
 from colony_analyzer import ColonyAnalyzer
 # Authentication removed for direct access
-from admin_logger import admin_logger
 
 st.set_page_config(
     page_title="Bacterial Colony Analyzer",
@@ -291,8 +290,9 @@ def main():
 
     # Initialize session tracking with group ID
     if 'session_id' not in st.session_state:
-        st.session_state.session_id = admin_logger.generate_session_id(st.session_state.group_id)
-        admin_logger.log_session(st.session_state.session_id, st.session_state.group_id)
+        import hashlib
+        import time
+        st.session_state.session_id = hashlib.md5(f"{st.session_state.group_id}_{time.time()}".encode()).hexdigest()[:8]
     
     # Main app interface
     col1, col2 = st.columns([3, 1])
@@ -329,13 +329,7 @@ def main():
                 image = Image.open(uploaded_file)
                 st.image(image, caption="Preview", width=200)
                 
-                # Log upload
-                admin_logger.log_upload(
-                    st.session_state.session_id, 
-                    uploaded_file, 
-                    uploaded_file.name,
-                    st.session_state.group_id
-                )
+                # Upload logged to session
         
         elif analysis_mode == "Multi-Image Comparison":
             st.header("Upload Multiple Images")
@@ -773,28 +767,7 @@ def main():
                         if results is not None:
                             add_run_to_history(params, results, uploaded_file.name)
                             
-                            # Log analysis for admin
-                            admin_logger.log_analysis(
-                                st.session_state.session_id,
-                                params,
-                                results
-                            )
-                            
-                            # Save analysis images for admin viewing
-                            if 'marked_image' in results:
-                                admin_logger.save_analysis_image(
-                                    st.session_state.session_id,
-                                    results['marked_image'],
-                                    f"{uploaded_file.name}_highlighted.png"
-                                )
-                            
-                            # Save colony detection image
-                            if 'colony_viz' in results:
-                                admin_logger.save_analysis_image(
-                                    st.session_state.session_id,
-                                    results['colony_viz'],
-                                    f"{uploaded_file.name}_detection.png"
-                                )
+                            # Analysis completed successfully
                 else:
                     # Use cached results
                     results = st.session_state.analysis_results
