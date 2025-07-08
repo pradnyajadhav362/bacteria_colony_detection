@@ -275,8 +275,8 @@ st.markdown("""
 def main():
     # Simple user tracking with group ID
     if 'user_logged_in' not in st.session_state:
-            st.title("Bacterial Colony Analysis")
-    st.markdown("Enter your Group ID to access the analysis tool")
+        st.title("Bacterial Colony Analysis")
+        st.markdown("Enter your Group ID to access the analysis tool")
         
         group_id = st.text_input("Group ID:", placeholder="A1, A2")
         
@@ -288,7 +288,7 @@ def main():
             else:
                 st.error("Please enter a valid Group ID")
         return
-    
+
     # Initialize session tracking with group ID
     if 'session_id' not in st.session_state:
         st.session_state.session_id = admin_logger.generate_session_id(st.session_state.group_id)
