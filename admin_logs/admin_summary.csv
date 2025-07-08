@@ -1,9 +1,0 @@
-session_id,timestamp,user_info,image_name,total_uploads,total_analyses,total_downloads,colony_count,analysis_successful
-b58b2b68c62f,2025-07-08T13:29:00.873629,A1,petri_dish_A1.png,1,1,2,2.0,True
-68b59dc35fc5,2025-07-08T13:29:00.927834,A2,petri_dish_A2.png,1,1,2,3.0,True
-f8fea4bbafe1,2025-07-08T13:29:00.982541,B1,petri_dish_B1.png,1,1,2,4.0,True
-938f7db7f2e1,2025-07-08T13:29:01.038105,B2,petri_dish_B2.png,1,0,0,0.0,False
-44026637b3da,2025-07-08T13:29:15.066702,A1,petri_dish_A1.png,1,1,2,2.0,True
-71016a068004,2025-07-08T13:29:15.118068,A2,petri_dish_A2.png,1,1,2,3.0,True
-0a9e3a28270b,2025-07-08T13:29:15.171442,B1,petri_dish_B1.png,1,1,2,4.0,True
-b25722d91943,2025-07-08T13:29:15.225254,B2,petri_dish_B2.png,1,1,0,5.0,True

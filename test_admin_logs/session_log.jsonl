@@ -1,5 +1,0 @@
-{"session_id": "23312240f071", "timestamp": "2025-07-08T13:27:39.472984", "action": "session_start", "user_info": "TestGroup_A1"}
-{"session_id": "23312240f071", "timestamp": "2025-07-08T13:27:39.490678", "action": "upload", "image_name": "test_petri_dish.png", "image_path": "test_admin_logs/session_23312240f071/uploads/test_petri_dish.png", "user_info": "TestGroup_A1", "file_size": 481075}
-{"session_id": "23312240f071", "timestamp": "2025-07-08T13:27:39.492185", "action": "analysis", "parameters": {"bilateral_d": 9, "gamma": 1.2, "min_colony_size": 15, "n_top_colonies": 20}, "colony_count": 3, "analysis_duration": 15.5, "results_file": "test_admin_logs/results/23312240f071_results.json", "params_file": "test_admin_logs/parameters/23312240f071_params.json", "analysis_successful": true}
-{"session_id": "23312240f071", "timestamp": "2025-07-08T13:27:39.517998", "action": "download", "download_type": "csv", "filename": "colonies_complete.csv"}
-{"session_id": "23312240f071", "timestamp": "2025-07-08T13:27:39.518061", "action": "download", "download_type": "image", "filename": "highlighted.png"}
