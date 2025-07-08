@@ -1911,15 +1911,8 @@ def display_statistical_tests(results):
         
         if all(len(group) > 0 for group in sample_groups):
             f_stat, p_value = stats.f_oneway(*sample_groups)
-            
             st.write("**One-way ANOVA for Colony Area:**")
-            st.write(f"F-statistic: {f_stat:.3f}")
             st.write(f"P-value: {p_value:.6f}")
-            
-            if p_value < 0.05:
-                st.success("Significant differences found between samples (p < 0.05)")
-            else:
-                st.info("No significant differences found between samples (p ≥ 0.05)")
     
     # pairwise t-tests
     if len(samples) == 2 and 'area' in combined_df.columns:
@@ -1928,11 +1921,8 @@ def display_statistical_tests(results):
         
         if len(group1) > 0 and len(group2) > 0:
             t_stat, p_value = stats.ttest_ind(group1, group2)
-            
             st.write("**Independent t-test for Colony Area:**")
-            st.write(f"t-statistic: {t_stat:.3f}")
             st.write(f"P-value: {p_value:.6f}")
-            st.write(f"Mean difference: {group1.mean() - group2.mean():.2f}")
 
 if __name__ == "__main__":
     main() 
