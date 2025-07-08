@@ -1797,7 +1797,6 @@ def display_pca_results(results):
     # feature set selection dropdown
     feature_options = {
         'Morphology Only': 'morphology',
-        'Bio Interest Score Only': 'bio_scoring', 
         'Bio Score + Morphology': 'bio_with_morphology',
         'Size & Shape': 'size_shape',
         'Advanced Shape': 'advanced_shape',
@@ -1823,46 +1822,7 @@ def display_pca_results(results):
     if not pca_data or 'error' in pca_data:
         if pca_data and 'error' in pca_data:
             st.warning(f"❌ {pca_data['error']}")
-            
-            # suggest alternatives
-            if pca_data['feature_set'] == 'bio_scoring':
-                st.info("""
-                                 💡 **Alternative for Bio Interest Analysis:**
-                 - Use **"Bio Score + Morphology"** to see how bio scores relate to colony shapes
-                 - Or try **"All Available Features"** for comprehensive analysis
-                 - Single-feature analysis below shows bio interest distributions by sample
-                """)
-            else:
-                st.info("💡 **Try selecting a different feature set** with more available features.")
-                
-            # show single-feature analysis if bio_interest is available
-            if pca_data['feature_set'] == 'bio_scoring' and 'bio_interest' in results['combined_df'].columns:
-                st.subheader("Bio Interest Score Analysis")
-                
-                # sample comparison
-                sample_bio_stats = results['combined_df'].groupby('sample')['bio_interest'].agg(['mean', 'std', 'count']).round(3)
-                sample_bio_stats.columns = ['Mean Bio Score', 'Std Bio Score', 'Colony Count']
-                sample_bio_stats = sample_bio_stats.sort_values('Mean Bio Score', ascending=False)
-                
-                st.write("**Bio Interest Score by Sample:**")
-                st.dataframe(sample_bio_stats, use_container_width=True)
-                
-                # histogram
-                import plotly.express as px
-                fig_hist = px.histogram(
-                    results['combined_df'], 
-                    x='bio_interest', 
-                    color='sample',
-                    title="Bio Interest Score Distribution by Sample",
-                    labels={'bio_interest': 'Bio Interest Score', 'count': 'Colony Count'}
-                )
-                st.plotly_chart(fig_hist, use_container_width=True)
-                
-                # ranking
-                best_sample = sample_bio_stats.index[0]
-                worst_sample = sample_bio_stats.index[-1]
-                st.write(f"🏆 **Highest Bio Interest:** {best_sample} (avg: {sample_bio_stats.loc[best_sample, 'Mean Bio Score']:.3f})")
-                st.write(f"📉 **Lowest Bio Interest:** {worst_sample} (avg: {sample_bio_stats.loc[worst_sample, 'Mean Bio Score']:.3f})")
+            st.info("💡 **Try selecting a different feature set** with more available features.")
         else:
             st.warning("PCA analysis not available - insufficient numeric features for selected feature set")
         return
