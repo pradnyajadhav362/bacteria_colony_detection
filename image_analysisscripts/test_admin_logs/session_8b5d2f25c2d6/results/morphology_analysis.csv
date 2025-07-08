@@ -1,0 +1,4 @@
+colony_id,form,roundness,aspect_ratio
+1,circular,0.85,1.1
+2,irregular,0.65,1.4
+3,circular,0.9,1.0

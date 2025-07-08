@@ -303,6 +303,7 @@ def main():
     # Initialize session tracking with group ID
     if 'session_id' not in st.session_state:
         st.session_state.session_id = admin_logger.generate_session_id(st.session_state.user_group_id)
+        admin_logger.log_session(st.session_state.session_id, st.session_state.user_group_id)
     
     # Main app interface
     col1, col2 = st.columns([3, 1])

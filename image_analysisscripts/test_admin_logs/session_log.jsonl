@@ -1,0 +1,5 @@
+{"session_id": "8b5d2f25c2d6", "timestamp": "2025-07-08T13:21:39.113255", "action": "session_start", "user_info": "TestGroup_A1"}
+{"session_id": "8b5d2f25c2d6", "timestamp": "2025-07-08T13:21:39.140613", "action": "upload", "image_name": "test_petri_dish.png", "image_path": "test_admin_logs/session_8b5d2f25c2d6/uploads/test_petri_dish.png", "user_info": "TestGroup_A1", "file_size": 481080}
+{"session_id": "8b5d2f25c2d6", "timestamp": "2025-07-08T13:21:39.141792", "action": "analysis", "parameters": {"bilateral_d": 9, "gamma": 1.2, "min_colony_size": 15, "n_top_colonies": 20}, "colony_count": 3, "analysis_duration": 15.5, "results_file": "test_admin_logs/results/8b5d2f25c2d6_results.json", "params_file": "test_admin_logs/parameters/8b5d2f25c2d6_params.json", "analysis_successful": true}
+{"session_id": "8b5d2f25c2d6", "timestamp": "2025-07-08T13:21:39.171283", "action": "download", "download_type": "csv", "filename": "colonies_complete.csv"}
+{"session_id": "8b5d2f25c2d6", "timestamp": "2025-07-08T13:21:39.171349", "action": "download", "download_type": "image", "filename": "highlighted.png"}

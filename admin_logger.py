@@ -34,6 +34,19 @@ class AdminLogger:
         
         return hashlib.md5(session_data.encode()).hexdigest()[:12]
     
+    def log_session(self, session_id, user_info):
+        # log session start
+        timestamp = datetime.datetime.now().isoformat()
+        
+        log_entry = {
+            "session_id": session_id,
+            "timestamp": timestamp,
+            "action": "session_start",
+            "user_info": user_info
+        }
+        
+        self._append_log(log_entry)
+    
     def log_upload(self, session_id, image_file, image_name, user_info=None):
         # log uploaded image and metadata
         timestamp = datetime.datetime.now().isoformat()
@@ -91,9 +104,13 @@ class AdminLogger:
         
         # save detailed results if successful
         if results:
+            # create session-specific results directory
+            session_results_dir = self.log_dir / f"session_{session_id}" / "results"
+            session_results_dir.mkdir(parents=True, exist_ok=True)
+            
             # save processed image
             if 'processed_image' in results:
-                processed_img_path = self.log_dir / "processed_images" / f"{session_id}_processed.png"
+                processed_img_path = session_results_dir / f"processed_image.png"
                 from PIL import Image
                 import numpy as np
                 
@@ -101,11 +118,42 @@ class AdminLogger:
                     img = Image.fromarray(results['processed_image'])
                     img.save(processed_img_path)
             
+            # save all available dataframes as CSV
+            csv_files_saved = []
+            
             # save colony data if available
             if 'combined_df' in results and not results['combined_df'].empty:
-                csv_path = self.log_dir / "results" / f"{session_id}_colonies.csv"
+                csv_path = session_results_dir / "colonies_complete.csv"
                 results['combined_df'].to_csv(csv_path, index=False)
-                results_summary["colony_data_path"] = str(csv_path)
+                csv_files_saved.append(str(csv_path))
+            
+            # save morphology data
+            if 'morph_df' in results and not results['morph_df'].empty:
+                csv_path = session_results_dir / "morphology_analysis.csv"
+                results['morph_df'].to_csv(csv_path, index=False)
+                csv_files_saved.append(str(csv_path))
+            
+            # save color analysis data
+            if 'colony_data' in results and results['colony_data']:
+                csv_path = session_results_dir / "color_analysis.csv"
+                import pandas as pd
+                color_df = pd.DataFrame(results['colony_data'])
+                color_df.to_csv(csv_path, index=False)
+                csv_files_saved.append(str(csv_path))
+            
+            # save density analysis data
+            if 'density_df' in results and not results['density_df'].empty:
+                csv_path = session_results_dir / "density_analysis.csv"
+                results['density_df'].to_csv(csv_path, index=False)
+                csv_files_saved.append(str(csv_path))
+            
+            # save top colonies data
+            if 'top_colonies_df' in results and not results['top_colonies_df'].empty:
+                csv_path = session_results_dir / "top_colonies.csv"
+                results['top_colonies_df'].to_csv(csv_path, index=False)
+                csv_files_saved.append(str(csv_path))
+            
+            results_summary["csv_files"] = csv_files_saved
         
         with open(results_file, 'w') as f:
             json.dump(results_summary, f, indent=2)
