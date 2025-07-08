@@ -1756,7 +1756,7 @@ def display_sample_overview(results):
         for i, (sample_name, sample_results) in enumerate(results['individual_results'].items()):
             with cols[i % 3]:
                 if sample_results and 'original_image' in sample_results:
-                    st.image(sample_results['original_image'], caption=sample_name, use_column_width=True)
+                    st.image(sample_results['original_image'], caption=sample_name, use_container_width=True)
 
 def display_pca_results(results):
     # displays pca analysis results
