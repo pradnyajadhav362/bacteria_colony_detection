@@ -1591,12 +1591,8 @@ def run_multi_image_analysis(uploaded_files, sample_labels, params):
         'total_colonies': len(combined_df)
     }
     
-    # add pca analysis
-    try:
-        comparison_results['pca_results'] = run_pca_analysis(combined_df)
-    except Exception as e:
-        print(f"pca analysis failed: {e}")
-        comparison_results['pca_results'] = None
+    # pca analysis will be done dynamically in display_pca_results
+    comparison_results['pca_results'] = None
     
     # add similarity analysis
     try:
@@ -1607,13 +1603,29 @@ def run_multi_image_analysis(uploaded_files, sample_labels, params):
     
     return comparison_results
 
-def run_pca_analysis(combined_df):
+def run_pca_analysis(combined_df, feature_set='morphology'):
     # performs pca on colony features to identify variability patterns
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
     
-    # select numeric features for pca
-    numeric_cols = ['area', 'perimeter', 'circularity', 'aspect_ratio', 'solidity']
+    # define different feature sets
+    feature_sets = {
+        'morphology': ['area', 'perimeter', 'circularity', 'aspect_ratio', 'solidity'],
+        'bio_scoring': ['bio_interest'],
+        'bio_with_morphology': ['area', 'perimeter', 'circularity', 'aspect_ratio', 'solidity', 'bio_interest'],
+        'size_shape': ['area', 'perimeter', 'circularity'],
+        'advanced_shape': ['aspect_ratio', 'solidity', 'circularity'],
+        'all_available': None  # will use all numeric columns
+    }
+    
+    # select features based on set
+    if feature_set == 'all_available':
+        numeric_cols = combined_df.select_dtypes(include=[np.number]).columns.tolist()
+        # remove sample-related columns
+        numeric_cols = [col for col in numeric_cols if col not in ['sample', 'image_name', 'colony_id']]
+    else:
+        numeric_cols = feature_sets.get(feature_set, feature_sets['morphology'])
+    
     available_cols = [col for col in numeric_cols if col in combined_df.columns]
     
     if len(available_cols) < 2:
@@ -1647,6 +1659,7 @@ def run_pca_analysis(combined_df):
         'pca_df': pca_df,
         'explained_variance': pca.explained_variance_ratio_,
         'feature_names': available_cols,
+        'feature_set': feature_set,
         'sample_variance': sample_variance,
         'most_variable': max(sample_variance, key=sample_variance.get),
         'least_variable': min(sample_variance, key=sample_variance.get)
@@ -1701,9 +1714,13 @@ def display_multi_image_results(results):
         avg_colonies = results['total_colonies'] / results['sample_count']
         st.metric("Avg Colonies/Sample", f"{avg_colonies:.1f}")
     with col4:
-        if results['pca_results']:
-            most_variable = results['pca_results']['most_variable']
-            st.metric("Most Variable", most_variable)
+        # calculate quick variability metric
+        try:
+            sample_counts = results['combined_df']['sample'].value_counts()
+            most_colonies = sample_counts.idxmax()
+            st.metric("Most Colonies", most_colonies)
+        except:
+            st.metric("Status", "Ready")
     
     # create tabs for different analyses
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
@@ -1773,11 +1790,53 @@ def display_pca_results(results):
     
     st.subheader("Principal Component Analysis")
     
-    if not results['pca_results']:
-        st.warning("PCA analysis not available - insufficient numeric features")
+    # feature set selection dropdown
+    feature_options = {
+        'Morphology Only': 'morphology',
+        'Bio Interest Score Only': 'bio_scoring', 
+        'Bio Score + Morphology': 'bio_with_morphology',
+        'Size & Shape': 'size_shape',
+        'Advanced Shape': 'advanced_shape',
+        'All Available Features': 'all_available'
+    }
+    
+    selected_feature_name = st.selectbox(
+        "Select Feature Set for PCA:",
+        options=list(feature_options.keys()),
+        index=0,
+        help="Choose which features to include in the PCA analysis"
+    )
+    
+    selected_feature_set = feature_options[selected_feature_name]
+    
+    # run pca with selected features
+    try:
+        pca_data = run_pca_analysis(results['combined_df'], selected_feature_set)
+    except Exception as e:
+        st.error(f"PCA analysis failed: {e}")
         return
     
-    pca_data = results['pca_results']
+    if not pca_data:
+        st.warning("PCA analysis not available - insufficient numeric features for selected feature set")
+        return
+    
+    # show selected features
+    st.write(f"**Selected Features ({selected_feature_name}):**")
+    feature_descriptions = {
+        'area': 'Colony Area (pixels²)',
+        'perimeter': 'Colony Perimeter (pixels)',
+        'circularity': 'Colony Circularity (0-1)',
+        'aspect_ratio': 'Colony Aspect Ratio',
+        'solidity': 'Colony Solidity (0-1)',
+        'bio_interest': 'Biological Interest Score (0-1)'
+    }
+    
+    feature_list = []
+    for feature in pca_data['feature_names']:
+        desc = feature_descriptions.get(feature, feature)
+        feature_list.append(desc)
+    
+    st.write(", ".join(feature_list))
     
     # variance explained
     st.write("**Variance Explained by Components:**")
