@@ -1,195 +1,48 @@
-#  Bacterial Colony Analysis Pipeline
+# Bacterial Colony Analysis Tool
 
-A comprehensive image analysis pipeline for detecting, characterizing, and scoring bacterial colonies from petri dish images. This project includes both a modular Python class for analysis and a Streamlit web application with authentication.
+A web-based image analysis tool for detecting and characterizing bacterial colonies from petri dish images.
 
-##  Features
+## Features
 
-### Analysis Pipeline
-- **Image Preprocessing**: Noise reduction, contrast enhancement, gamma correction
-- **Plate Detection**: Automatic detection of petri dish boundaries
-- **Colony Segmentation**: Advanced algorithms to separate individual colonies
-- **Morphology Analysis**: Size, shape, roundness, and edge characteristics
-- **Color Clustering**: Group colonies by visual similarity
-- **Density Analysis**: Opacity, texture, and density measurements
-- **Scoring System**: Combined interest scores for colony prioritization
+- **Automated Colony Detection**: Advanced image processing to identify individual colonies
+- **Morphological Analysis**: Size, shape, roundness, and edge characteristics
+- **Color Classification**: Groups colonies by visual similarity  
+- **Density Measurements**: Opacity and texture analysis
+- **Interactive Interface**: Easy-to-use web application
+- **Multi-Image Comparison**: Compare results across different samples
 
-### Web Application
-- **Interactive Interface**: User-friendly Streamlit app
-- **Parameter Control**: Adjustable analysis parameters
-- **Visualization**: Multiple result views and plots
-- **Authentication**: Email-based access control
-- **Cloud Deployment**: Ready for Streamlit Cloud
+## Usage
 
-##  Authentication
+1. **Access the App**: Visit the deployed application
+2. **Enter Group ID**: Use identifiers like A1, A2, B1, B2
+3. **Upload Image**: Select a petri dish image for analysis
+4. **Choose Analysis Mode**: 
+   - Single Image Analysis
+   - Multi-Image Comparison
+5. **Run Analysis**: Process your image and view results
+6. **Download Results**: Export colony data and processed images
 
-The app includes email-based authentication to control access:
+## Analysis Capabilities
 
-### Setup Access List
+- Colony count and distribution
+- Individual colony properties (size, shape, color)
+- Statistical summaries and visualizations
+- Processed image overlays showing detected colonies
+- CSV export of all measurements
 
-#### For Local Development:
-Create `local_files/allowed_emails.txt` and add authorized email addresses:
-```txt
-prjadhav@andrew.cmu.edu
-colleague1@company.com
-student1@university.edu
-```
+## Requirements
 
-#### For Streamlit Cloud Deployment:
-1. Go to your app in Streamlit Cloud
-2. Click "Settings" → "Secrets"
-3. Add environment variable:
-```toml
-ALLOWED_EMAILS = "prjadhav@andrew.cmu.edu,colleague1@company.com,student1@university.edu"
-```
+- Modern web browser
+- Petri dish images (JPEG, PNG formats)
+- Stable internet connection
 
-### Authentication Features
-- Email-based login
-- Session management
-- Logout functionality
-- Access control for authorized users only
+## Scientific Applications
 
-##  Installation
-
-### Local Development
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd bacterial-colony-analyzer
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the app locally
-streamlit run app.py
-```
-
-### Dependencies
-- Python 3.8+
-- OpenCV
-- scikit-image
-- scikit-learn
-- pandas
-- matplotlib
-- plotly
-- streamlit
-
-##  Deployment
-
-### Streamlit Cloud Deployment
-1. Push your code to GitHub
-2. Sign up at [share.streamlit.io](https://share.streamlit.io)
-3. Connect your GitHub repository
-4. Set main file to `app.py`
-5. Deploy
-
-See `deploy_guide.md` for detailed deployment instructions.
-
-##  Usage
-
-### Web Application
-1. **Login**: Enter your authorized email address
-2. **Upload Image**: Select a petri dish image
-3. **Adjust Parameters**: Modify analysis settings if needed
-4. **Run Analysis**: Click "Run Analysis" to process
-5. **Explore Results**: View results in different tabs
-
-
-
-### Programmatic Usage
-```python
-from colony_analyzer import ColonyAnalyzer
-
-# Initialize analyzer
-analyzer = ColonyAnalyzer()
-
-# Run full analysis
-results = analyzer.run_full_analysis("path/to/image.jpg")
-
-# Access results
-print(f"Found {len(results['colony_properties'])} colonies")
-print(f"Top colony score: {results['top_colonies']['bio_interest'].max()}")
-```
-
-##  Project Structure
-
-```
-bacterial-colony-analyzer/
- app.py                 # Main Streamlit application
- auth.py               # Authentication module
- colony_analyzer.py    # Core analysis pipeline
- requirements.txt      # Python dependencies
- allowed_emails.txt   # Authorized email addresses
- .streamlit/
-    config.toml      # Streamlit configuration
- deploy_guide.md      # Deployment instructions
- test_colony_analyzer.py  # Test suite
- demo_data_generator.py   # Sample data generator
- README.md            # This file
-```
-
-##  Configuration
-
-### Analysis Parameters
-- **Preprocessing**: Bilateral filtering, CLAHE, gamma correction
-- **Segmentation**: Adaptive thresholding, watershed, size filters
-- **Clustering**: K-means color clustering
-- **Scoring**: Morphology, density, and novelty weights
-
-### Authentication Options
-- **File-based**: Edit `allowed_emails.txt`
-- **Environment Variables**: Set `ALLOWED_EMAILS`
-- **Hardcoded**: Modify `auth.py` directly
-
-##  Results
-
-The analysis provides:
-- **Colony Count**: Total number of detected colonies
-- **Morphology Data**: Size, shape, and edge characteristics
-- **Color Groups**: Clustered colonies by visual similarity
-- **Density Metrics**: Opacity and texture measurements
-- **Interest Scores**: Combined scoring for colony prioritization
-- **Visualizations**: Interactive plots and annotated images
-
-## 🧪 Testing
-
-Run the test suite:
-```bash
-python test_colony_analyzer.py
-```
-
-Generate demo data:
-```bash
-python demo_data_generator.py
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-##  License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-##  Support
-
-For issues and questions:
-1. Check the troubleshooting section in `deploy_guide.md`
-2. Review the test suite for usage examples
-3. Open an issue on GitHub
-
-##  Scientific Applications
-
-This pipeline is designed for:
 - Microbiology research
-- Colony counting and characterization
+- Laboratory quality control
+- Educational demonstrations
 - High-throughput screening
-- Quality control in laboratory settings
-- Educational purposes
 
 ---
 
-**Note**: This tool is designed for research and educational use. Always validate results with manual inspection for critical applications. 
+**Note**: This tool is designed for research and educational purposes. Results should be validated with manual inspection for critical applications. 
