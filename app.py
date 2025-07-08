@@ -551,7 +551,7 @@ def main():
             correct_admin_password = os.getenv('ADMIN_PASSWORD', 'default_admin_123')
             
             if admin_password == correct_admin_password:
-                st.success("🔓 Admin access granted - viewing all user data")
+                st.success("Admin access granted - viewing all user data")
                 
                 # Quick stats
                 try:
@@ -590,7 +590,7 @@ def main():
                             st.success(f"All user data exported to: {export_path}")
                             
                         # Link to full admin dashboard
-                        st.info("💡 For advanced analytics, use the separate admin dashboard: `python3 run_admin.py`")
+                        st.info("For advanced analytics, use the separate admin dashboard: `python3 run_admin.py`")
                     else:
                         st.info("No user sessions recorded yet. Users must upload images to generate data.")
                 except Exception as e:
@@ -598,11 +598,9 @@ def main():
                     st.info("Use separate admin dashboard: `python3 run_admin.py`")
                     
             elif admin_password:
-                st.error("❌ Invalid admin password")
-                st.info("💡 Set ADMIN_PASSWORD environment variable for secure access")
+                st.error("Invalid admin password")
             else:
-                st.info("🔐 Enter admin password to access user data and analytics")
-                st.markdown("**Security:** Admin password uses environment variables (no hardcoded passwords)")
+                st.info("Enter admin password to access user data and analytics")
 
     
     # Create main layout with guide on right if activated
