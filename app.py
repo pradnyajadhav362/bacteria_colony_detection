@@ -495,7 +495,7 @@ def main():
                 else:
                     st.error("Please upload an image first!")
         
-        else:  # Multi-Image Comparison mode
+        elif analysis_mode == "Multi-Image Comparison":
             if st.button(" Run Multi-Image Analysis", type="primary"):
                 if uploaded_files and len(uploaded_files) >= 2:
                     st.session_state.run_analysis = True
