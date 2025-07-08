@@ -794,6 +794,12 @@ def main():
                     with st.spinner(f"Analyzing {len(uploaded_files)} images..."):
                         results = run_multi_image_analysis(uploaded_files, sample_labels, stored_params)
                         st.session_state.multi_analysis_results = results
+                        
+                        # Add to run history
+                        if results is not None:
+                            sample_names = list(sample_labels.values()) if sample_labels else [f.name for f in uploaded_files]
+                            multi_image_name = f"Multi-Image: {', '.join(sample_names[:3])}" + (f" (+{len(sample_names)-3} more)" if len(sample_names) > 3 else "")
+                            add_run_to_history(stored_params, results, multi_image_name)
                 else:
                     # Use cached results
                     results = st.session_state.multi_analysis_results
@@ -1678,13 +1684,14 @@ def display_multi_image_results(results):
             st.metric("Most Variable", most_variable)
     
     # create tabs for different analyses
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "Sample Overview",
         "PCA Analysis", 
         "Similarity Analysis",
         "Colony Comparison",
         "Top Colonies Analysis",
-        "Statistical Tests"
+        "Statistical Tests",
+        "Run History"
     ])
     
     with tab1:
@@ -1704,6 +1711,9 @@ def display_multi_image_results(results):
     
     with tab6:
         display_statistical_tests(results)
+    
+    with tab7:
+        display_run_history()
 
 def display_sample_overview(results):
     # shows overview of each sample
