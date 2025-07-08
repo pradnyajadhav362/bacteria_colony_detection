@@ -600,7 +600,7 @@ def main():
             elif admin_password:
                 st.error("Invalid admin password")
             else:
-                st.info("Enter admin password to access user data and analytics")
+                st.info("Enter admin password")
 
     
     # Create main layout with guide on right if activated
