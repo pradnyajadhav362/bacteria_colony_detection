@@ -45,4 +45,3 @@ A web-based image analysis tool for detecting and characterizing bacterial colon
 
 ---
 
-**Note**: This tool is designed for research and educational purposes. Results should be validated with manual inspection for critical applications. 
