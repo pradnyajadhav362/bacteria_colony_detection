@@ -1,6 +1,20 @@
 # Admin password file (keep private)
 admin_password.txt
 
+# User data and logs (keep private)
+admin_logs/
+exported_*/
+*_export/
+test_admin_logs/
+
+# Data export and admin scripts (keep local)
+export_user_data.py
+export_by_group.py
+export_real_data.py
+view_user_data.py
+admin_dashboard.py
+run_admin.py
+
 # Local files folder - contains reference materials not meant for GitHub
 local_files/
 
