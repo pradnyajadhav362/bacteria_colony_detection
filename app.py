@@ -15,7 +15,7 @@ import base64
 import json
 import datetime
 from colony_analyzer import ColonyAnalyzer
-from auth import init_auth
+# Authentication removed for direct access
 from admin_logger import admin_logger
 
 st.set_page_config(
@@ -274,13 +274,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
-    # Initialize authentication
-    auth = init_auth()
-    
-    # Initialize session tracking
+    # Initialize session tracking (no authentication required)
     if 'session_id' not in st.session_state:
-        user_info = getattr(auth, 'current_user', 'anonymous')
-        st.session_state.session_id = admin_logger.generate_session_id(user_info)
+        st.session_state.session_id = admin_logger.generate_session_id('anonymous_user')
     
     st.title("Bacterial Colony Analyzer")
     st.caption("Advanced image analysis for petri dish colony detection and characterization")
@@ -312,7 +308,7 @@ def main():
                     st.session_state.session_id, 
                     uploaded_file, 
                     uploaded_file.name,
-                    getattr(auth, 'current_user', 'anonymous')
+                    'anonymous_user'
                 )
         
         elif analysis_mode == "Multi-Image Comparison":
