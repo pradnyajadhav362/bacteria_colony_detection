@@ -1,6 +1,5 @@
-# app.py
-# bacterial colony analysis visualization app
-# provides interactive interface for analyzing petri dish images
+# bacterial colony analysis app - updated 2025-07-08 14:00
+# admin functionality removed for clean user experience
 
 import streamlit as st
 import plotly.express as px
@@ -276,8 +275,8 @@ st.markdown("""
 def main():
     # Simple user tracking with group ID
     if 'user_logged_in' not in st.session_state:
-        st.title("Bacterial Colony Analysis")
-        st.markdown("Enter your Group ID to access the analysis tool")
+            st.title("Bacterial Colony Analysis")
+    st.markdown("Enter your Group ID to access the analysis tool")
         
         group_id = st.text_input("Group ID:", placeholder="A1, A2")
         
