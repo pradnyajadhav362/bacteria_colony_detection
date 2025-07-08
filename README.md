@@ -108,7 +108,7 @@ python run_admin.py
 - Download original images, processed images, and colony data
 - Monitor analysis parameters and success rates
 
-**Admin Login:** Password is `admin123` (change in `admin_dashboard.py`)
+**Admin Login:** Set secure password via environment variable (see `admin_setup.md`)
 
 ### Programmatic Usage
 ```python

@@ -288,7 +288,7 @@ def main():
     # Add mode selection
     analysis_mode = st.radio(
         "Choose Analysis Mode:",
-        ["Single Image Analysis", "Multi-Image Comparison"],
+        ["Single Image Analysis", "Multi-Image Comparison", "Admin Dashboard"],
         horizontal=True
     )
     
@@ -315,7 +315,7 @@ def main():
                     getattr(auth, 'current_user', 'anonymous')
                 )
         
-        else:  # Multi-Image Comparison mode
+        elif analysis_mode == "Multi-Image Comparison":
             st.header("Upload Multiple Images")
             
             # Upload method selection
@@ -509,6 +509,50 @@ def main():
                 else:
                     st.error("Please upload at least 2 images for comparison!")
         
+        else:  # Admin Dashboard mode
+            st.header("Admin Dashboard")
+            
+            # Admin authentication
+            admin_password = st.text_input("Admin Password", type="password", key="admin_pass")
+            
+            # Get admin password from environment variable for security
+            import os
+            correct_admin_password = os.getenv('ADMIN_PASSWORD', 'default_admin_123')
+            
+            if admin_password == correct_admin_password:
+                st.success("Admin access granted")
+                
+                # Display admin functionality inline
+                st.success("Access granted to all user data")
+                
+                # Quick stats
+                all_sessions = admin_logger.get_all_sessions()
+                if not all_sessions.empty:
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Total Sessions", len(all_sessions))
+                    with col2:
+                        st.metric("Total Uploads", all_sessions['total_uploads'].sum())
+                    with col3:
+                        st.metric("Total Analyses", all_sessions['total_analyses'].sum())
+                    with col4:
+                        st.metric("Colonies Detected", all_sessions['colony_count'].sum())
+                    
+                    # Recent sessions
+                    st.subheader("Recent User Sessions")
+                    st.dataframe(all_sessions.tail(10), use_container_width=True)
+                    
+                    # Export data
+                    if st.button("Export All User Data"):
+                        export_path = admin_logger.export_all_data()
+                        st.success(f"All user data exported to: {export_path}")
+                else:
+                    st.info("No user sessions recorded yet. Users must upload images to generate data.")
+                    
+            elif admin_password:
+                st.error("Invalid admin password")
+            else:
+                st.info("Enter admin password to access user data and analytics")
 
     
     # Create main layout with guide on right if activated

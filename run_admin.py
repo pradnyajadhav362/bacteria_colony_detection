@@ -7,7 +7,8 @@ import sys
 
 def main():
     print("starting admin dashboard")
-    print("admin password: admin123")
+    print("set ADMIN_PASSWORD environment variable for secure access")
+    print("see admin_setup.md for configuration details")
     print("=" * 40)
     
     try:

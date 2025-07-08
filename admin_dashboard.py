@@ -21,7 +21,11 @@ def admin_login():
     if 'admin_logged_in' not in st.session_state:
         st.session_state.admin_logged_in = False
     
-    if admin_password == "admin123":  # change this to secure password
+    # Get admin password from environment variable for security
+    import os
+    correct_admin_password = os.getenv('ADMIN_PASSWORD', 'default_admin_123')
+    
+    if admin_password == correct_admin_password:
         st.session_state.admin_logged_in = True
         st.sidebar.success("Admin logged in")
         return True
