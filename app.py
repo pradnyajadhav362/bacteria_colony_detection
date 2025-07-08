@@ -511,48 +511,25 @@ def main():
         
         else:  # Admin Dashboard mode
             st.header("Admin Dashboard")
+            st.info("🔒 Admin access temporarily disabled in main app for stability")
+            st.markdown("""
+            **Secure Admin Access Available:**
             
-            # Admin authentication
-            admin_password = st.text_input("Admin Password", type="password", key="admin_pass")
+            Use the separate admin dashboard for full functionality:
+            ```bash
+            export ADMIN_PASSWORD="your_secure_password"
+            python3 run_admin.py
+            ```
             
-            # Get admin password from environment variable for security
-            import os
-            correct_admin_password = os.getenv('ADMIN_PASSWORD', 'default_admin_123')
+            **Features:**
+            - View all user uploads and analysis data
+            - Track usage statistics and metrics  
+            - Export complete datasets for research
+            - Monitor colony detection performance
+            - Download session data as CSV/JSON
             
-            if admin_password == correct_admin_password:
-                st.success("Admin access granted")
-                
-                # Display admin functionality inline
-                st.success("Access granted to all user data")
-                
-                # Quick stats
-                all_sessions = admin_logger.get_all_sessions()
-                if not all_sessions.empty:
-                    col1, col2, col3, col4 = st.columns(4)
-                    with col1:
-                        st.metric("Total Sessions", len(all_sessions))
-                    with col2:
-                        st.metric("Total Uploads", all_sessions['total_uploads'].sum())
-                    with col3:
-                        st.metric("Total Analyses", all_sessions['total_analyses'].sum())
-                    with col4:
-                        st.metric("Colonies Detected", all_sessions['colony_count'].sum())
-                    
-                    # Recent sessions
-                    st.subheader("Recent User Sessions")
-                    st.dataframe(all_sessions.tail(10), use_container_width=True)
-                    
-                    # Export data
-                    if st.button("Export All User Data"):
-                        export_path = admin_logger.export_all_data()
-                        st.success(f"All user data exported to: {export_path}")
-                else:
-                    st.info("No user sessions recorded yet. Users must upload images to generate data.")
-                    
-            elif admin_password:
-                st.error("Invalid admin password")
-            else:
-                st.info("Enter admin password to access user data and analytics")
+            **Security:** Admin password uses environment variables (no hardcoded passwords)
+            """)
 
     
     # Create main layout with guide on right if activated
