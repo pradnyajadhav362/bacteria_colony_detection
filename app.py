@@ -274,12 +274,50 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
-    # Initialize session tracking (no authentication required)
-    if 'session_id' not in st.session_state:
-        st.session_state.session_id = admin_logger.generate_session_id('anonymous_user')
+    # Simple user tracking with group ID
+    if 'user_group_id' not in st.session_state:
+        st.session_state.user_group_id = None
     
-    st.title("Bacterial Colony Analyzer")
-    st.caption("Advanced image analysis for petri dish colony detection and characterization")
+    # Show group ID input if not set
+    if st.session_state.user_group_id is None:
+        st.title("🔬 Bacterial Colony Analyzer")
+        st.markdown("### Enter Your Group ID to Continue")
+        
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            group_id = st.text_input(
+                "Group ID / Student ID / Research Group:", 
+                placeholder="e.g., Group01, Student123, Lab_A, etc.",
+                help="Enter any identifier to track your analysis sessions"
+            )
+        with col2:
+            if st.button("Start Analysis", type="primary"):
+                if group_id.strip():
+                    st.session_state.user_group_id = group_id.strip()
+                    st.session_state.session_id = admin_logger.generate_session_id(group_id.strip())
+                    st.rerun()
+                else:
+                    st.error("Please enter a Group ID")
+        
+        st.markdown("---")
+        st.info("💡 **Why Group ID?** This helps track usage statistics and organize analysis results by research group or class")
+        st.stop()
+    
+    # Initialize session tracking with group ID
+    if 'session_id' not in st.session_state:
+        st.session_state.session_id = admin_logger.generate_session_id(st.session_state.user_group_id)
+    
+    # Main app interface
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.title("🔬 Bacterial Colony Analyzer")
+        st.caption("Advanced image analysis for petri dish colony detection and characterization")
+    with col2:
+        st.write(f"**User:** {st.session_state.user_group_id}")
+        if st.button("Change User", help="Switch to different Group ID"):
+            st.session_state.user_group_id = None
+            st.session_state.session_id = None
+            st.rerun()
     
     # Add mode selection
     analysis_mode = st.radio(
@@ -308,7 +346,7 @@ def main():
                     st.session_state.session_id, 
                     uploaded_file, 
                     uploaded_file.name,
-                    'anonymous_user'
+                    st.session_state.user_group_id
                 )
         
         elif analysis_mode == "Multi-Image Comparison":
@@ -532,9 +570,22 @@ def main():
                         with col4:
                             st.metric("Colonies Detected", all_sessions['colony_count'].sum())
                         
-                        # Recent sessions
-                        st.subheader("Recent User Sessions")
-                        st.dataframe(all_sessions.tail(10), use_container_width=True)
+                                            # Recent sessions
+                    st.subheader("Recent User Sessions")
+                    recent_sessions = all_sessions.tail(10)
+                    st.dataframe(recent_sessions, use_container_width=True)
+                    
+                    # Group usage breakdown
+                    if 'user_id' in all_sessions.columns:
+                        st.subheader("Group ID Usage Statistics")
+                        group_stats = all_sessions.groupby('user_id').agg({
+                            'total_uploads': 'sum',
+                            'total_analyses': 'sum', 
+                            'colony_count': 'sum',
+                            'session_id': 'count'
+                        }).rename(columns={'session_id': 'total_sessions'}).reset_index()
+                        group_stats = group_stats.sort_values('total_analyses', ascending=False)
+                        st.dataframe(group_stats, use_container_width=True)
                         
                         # Export data
                         if st.button("Export All User Data"):
