@@ -397,6 +397,19 @@ def main():
                 
                 st.success(f"✓ {len(uploaded_files)} images uploaded")
                 
+                # Speed mode option for multiple images
+                if len(uploaded_files) >= 3:
+                    use_fast_mode = st.checkbox(
+                        "🚀 Fast Mode (recommended for 3+ images)", 
+                        value=len(uploaded_files) >= 5,
+                        help="Uses optimized settings for faster processing. Slightly less detailed analysis but 2-3x faster."
+                    )
+                    
+                    if use_fast_mode:
+                        st.info("⚡ Fast mode enabled - processing will be 2-3x faster with optimized settings")
+                else:
+                    use_fast_mode = False
+                
                 # Auto-generate labels or allow custom labeling
                 label_method = st.radio(
                     "Sample labeling method:",
@@ -548,6 +561,7 @@ def main():
                     st.session_state.uploaded_files = uploaded_files
                     st.session_state.sample_labels = sample_labels
                     st.session_state.params = current_params
+                    st.session_state.use_fast_mode = use_fast_mode  # Store fast mode setting
                     st.session_state.analysis_mode = "multi"
                     # Clear cached results to force re-analysis
                     if 'multi_analysis_results' in st.session_state:
@@ -817,12 +831,14 @@ def main():
                 uploaded_files = st.session_state.uploaded_files
                 sample_labels = st.session_state.get('sample_labels', {})
                 stored_params = st.session_state.get('params', {})
+                use_fast_mode = st.session_state.get('use_fast_mode', False)
                 
                 # Check if we need to re-run analysis or use cached results
                 if 'multi_analysis_results' not in st.session_state:
                     # Run multi-image analysis
-                    with st.spinner(f"Analyzing {len(uploaded_files)} images..."):
-                        results = run_multi_image_analysis(uploaded_files, sample_labels, stored_params)
+                    mode_text = "fast mode" if use_fast_mode else "standard mode"
+                    with st.spinner(f"Analyzing {len(uploaded_files)} images in {mode_text}..."):
+                        results = run_multi_image_analysis(uploaded_files, sample_labels, stored_params, use_fast_mode)
                         st.session_state.multi_analysis_results = results
                         
                         # Add to run history
@@ -1545,9 +1561,10 @@ def display_binary_mask(results, n_top_colonies):
     else:
         st.warning("No binary mask available.")
 
-def run_multi_image_analysis(uploaded_files, sample_labels, params):
+def run_multi_image_analysis(uploaded_files, sample_labels, params, use_fast_mode=False):
     # memory-efficient analysis for large batches
-    print(f"starting multi image analysis for {len(uploaded_files)} files")
+    mode_desc = "fast" if use_fast_mode else "standard"
+    print(f"starting {mode_desc} multi image analysis for {len(uploaded_files)} files")
     
     all_results = {}
     combined_data = []
@@ -1561,8 +1578,17 @@ def run_multi_image_analysis(uploaded_files, sample_labels, params):
             with open(temp_filename, "wb") as f:
                 f.write(uploaded_file.getbuffer())
             
-            # run single analysis
-            analyzer = ColonyAnalyzer(**params)
+            # Apply speed optimizations if fast mode enabled
+            analysis_params = params.copy()
+            if use_fast_mode:
+                # Speed optimizations - process faster with less detail
+                analysis_params['bilateral_d'] = 5  # faster filtering (vs default 9)
+                analysis_params['clahe_clip_limit'] = 2.0  # lighter enhancement (vs default 3.0) 
+                analysis_params['adaptive_block_size'] = 17  # larger blocks for speed (vs default 15)
+                analysis_params['color_n_init'] = 3  # fewer k-means iterations (vs default 10)
+                print(f"fast mode optimizations applied")
+            
+            analyzer = ColonyAnalyzer(**analysis_params)
             results = analyzer.run_full_analysis(temp_filename)
             
             # get sample label
