@@ -387,6 +387,14 @@ def main():
                     st.error("Please select no more than 100 images")
                     uploaded_files = uploaded_files[:100]
                 
+                # Memory warnings for large batches
+                if len(uploaded_files) > 50:
+                    st.warning(f"⚠️ Processing {len(uploaded_files)} images may take 15-20 minutes and use significant memory. Consider processing in smaller batches if you experience crashes.")
+                elif len(uploaded_files) > 25:
+                    st.warning(f"⚠️ Processing {len(uploaded_files)} images may take 8-12 minutes. Memory optimization is active.")
+                elif len(uploaded_files) > 10:
+                    st.info(f"📊 Processing {len(uploaded_files)} images will take approximately 3-5 minutes.")
+                
                 st.success(f"✓ {len(uploaded_files)} images uploaded")
                 
                 # Auto-generate labels or allow custom labeling
@@ -1538,13 +1546,15 @@ def display_binary_mask(results, n_top_colonies):
         st.warning("No binary mask available.")
 
 def run_multi_image_analysis(uploaded_files, sample_labels, params):
-    # runs analysis on multiple images and combines results for comparison
-    print("starting multi image analysis")
+    # memory-efficient analysis for large batches
+    print(f"starting multi image analysis for {len(uploaded_files)} files")
     
     all_results = {}
     combined_data = []
     
     for i, uploaded_file in enumerate(uploaded_files):
+        print(f"processing {i+1}/{len(uploaded_files)}: {uploaded_file.name}")
+        
         try:
             # save temporary file
             temp_filename = f"temp_image_{i}.jpg"
@@ -1558,23 +1568,41 @@ def run_multi_image_analysis(uploaded_files, sample_labels, params):
             # get sample label
             sample_name = sample_labels.get(uploaded_file.name, f"Sample_{i+1}")
             
-            # store results
-            all_results[sample_name] = results
-            
-            # extract features for comparison
-            if results and 'combined_df' in results and not results['combined_df'].empty:
+            # Memory optimization: only store essential data, no images
+            if results and 'combined_df' in results and len(results.get('colony_properties', [])) > 0:
+                essential_results = {
+                    'colony_properties': results.get('colony_properties', []),
+                    'combined_df': results.get('combined_df', pd.DataFrame()),
+                    'sample_name': sample_name
+                }
+                all_results[sample_name] = essential_results
+                
+                # extract features for comparison
                 df = results['combined_df'].copy()
                 df['sample'] = sample_name
                 df['image_name'] = uploaded_file.name
                 combined_data.append(df)
+                print(f"successfully processed {uploaded_file.name}: {len(df)} colonies")
+            else:
+                print(f"no colonies detected in {uploaded_file.name}")
             
-            # cleanup
+            # cleanup immediately
             import os
             if os.path.exists(temp_filename):
                 os.remove(temp_filename)
+            
+            # Force garbage collection after every 5 images
+            if (i + 1) % 5 == 0:
+                import gc
+                gc.collect()
+                print(f"memory cleanup after {i+1} images")
                 
         except Exception as e:
             print(f"error processing {uploaded_file.name}: {e}")
+            # cleanup on error
+            import os
+            if os.path.exists(temp_filename):
+                os.remove(temp_filename)
             continue
     
     if not combined_data:
@@ -1782,11 +1810,18 @@ def display_sample_overview(results):
     # show sample images grid
     st.subheader("Sample Images")
     if len(results['individual_results']) > 0:
-        cols = st.columns(min(3, len(results['individual_results'])))
-        for i, (sample_name, sample_results) in enumerate(results['individual_results'].items()):
-            with cols[i % 3]:
-                if sample_results and 'original_image' in sample_results:
+        # Check how many samples have images stored
+        samples_with_images = [(name, res) for name, res in results['individual_results'].items() 
+                              if res and 'original_image' in res and res['original_image'] is not None]
+        
+        if samples_with_images:
+            st.write(f"Showing preview images for {len(samples_with_images)} samples:")
+            cols = st.columns(min(3, len(samples_with_images)))
+            for i, (sample_name, sample_results) in enumerate(samples_with_images):
+                with cols[i % 3]:
                     st.image(sample_results['original_image'], caption=sample_name, use_container_width=True)
+        else:
+            st.info("📸 Image previews not shown for memory optimization. Analysis results are complete and accurate.")
 
 def display_pca_results(results):
     # displays pca analysis results
