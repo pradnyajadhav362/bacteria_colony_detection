@@ -13,6 +13,7 @@ import io
 import base64
 import json
 import datetime
+import time
 from colony_analyzer import ColonyAnalyzer
 # Authentication removed for direct access
 
@@ -835,11 +836,25 @@ def main():
                 
                 # Check if we need to re-run analysis or use cached results
                 if 'multi_analysis_results' not in st.session_state:
-                    # Run multi-image analysis
+                    # Run multi-image analysis with progress tracking
                     mode_text = "fast mode" if use_fast_mode else "standard mode"
-                    with st.spinner(f"Analyzing {len(uploaded_files)} images in {mode_text}..."):
-                        results = run_multi_image_analysis(uploaded_files, sample_labels, stored_params, use_fast_mode)
+                    
+                    # Create progress tracking elements
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+                    status_text.text(f"Starting {mode_text} analysis for {len(uploaded_files)} images...")
+                    
+                    try:
+                        results = run_multi_image_analysis(uploaded_files, sample_labels, stored_params, use_fast_mode, progress_bar, status_text)
                         st.session_state.multi_analysis_results = results
+                        
+                        # Final status
+                        progress_bar.progress(100)
+                        status_text.text(f"✅ Analysis complete! Processed {len(uploaded_files)} images.")
+                    except Exception as e:
+                        status_text.text(f"❌ Analysis failed: {str(e)}")
+                        st.error(f"Analysis failed: {str(e)}")
+                        results = None
                         
                         # Add to run history
                         if results is not None:
@@ -1561,22 +1576,46 @@ def display_binary_mask(results, n_top_colonies):
     else:
         st.warning("No binary mask available.")
 
-def run_multi_image_analysis(uploaded_files, sample_labels, params, use_fast_mode=False):
-    # memory-efficient analysis for large batches
+def run_multi_image_analysis(uploaded_files, sample_labels, params, use_fast_mode=False, progress_bar=None, status_text=None):
+    # memory-efficient analysis for large batches with progress tracking
     mode_desc = "fast" if use_fast_mode else "standard"
     print(f"starting {mode_desc} multi image analysis for {len(uploaded_files)} files")
     
     all_results = {}
     combined_data = []
+    total_files = len(uploaded_files)
+    start_time = time.time()
     
     for i, uploaded_file in enumerate(uploaded_files):
-        print(f"processing {i+1}/{len(uploaded_files)}: {uploaded_file.name}")
+        # Update progress and status with time estimate
+        progress = int((i / total_files) * 100)
+        if progress_bar:
+            progress_bar.progress(progress)
+        
+        # Calculate estimated time remaining
+        if i > 0:
+            elapsed_time = time.time() - start_time
+            avg_time_per_image = elapsed_time / i
+            remaining_images = total_files - i
+            estimated_remaining = int(avg_time_per_image * remaining_images)
+            time_text = f" (⏱️ ~{estimated_remaining}s remaining)" if estimated_remaining > 0 else ""
+        else:
+            time_text = ""
+        
+        if status_text:
+            status_text.text(f"📸 Processing {i+1}/{total_files}: {uploaded_file.name}{time_text}")
+        
+        print(f"processing {i+1}/{total_files}: {uploaded_file.name}")
         
         try:
             # save temporary file
             temp_filename = f"temp_image_{i}.jpg"
             with open(temp_filename, "wb") as f:
                 f.write(uploaded_file.getbuffer())
+            
+            # Update status for analysis start
+            if status_text:
+                status_text.text(f"🔬 Analyzing colonies in {uploaded_file.name} ({i+1}/{total_files})...")
             
             # Apply speed optimizations if fast mode enabled
             analysis_params = params.copy()
@@ -1608,8 +1647,15 @@ def run_multi_image_analysis(uploaded_files, sample_labels, params, use_fast_mod
                 df['sample'] = sample_name
                 df['image_name'] = uploaded_file.name
                 combined_data.append(df)
-                print(f"successfully processed {uploaded_file.name}: {len(df)} colonies")
+                
+                # Update status for successful processing
+                colony_count = len(df)
+                if status_text:
+                    status_text.text(f"✅ Found {colony_count} colonies in {uploaded_file.name} ({i+1}/{total_files})")
+                print(f"successfully processed {uploaded_file.name}: {colony_count} colonies")
             else:
+                if status_text:
+                    status_text.text(f"⚠️ No colonies detected in {uploaded_file.name} ({i+1}/{total_files})")
                 print(f"no colonies detected in {uploaded_file.name}")
             
             # cleanup immediately
@@ -1621,6 +1667,8 @@ def run_multi_image_analysis(uploaded_files, sample_labels, params, use_fast_mod
             if (i + 1) % 5 == 0:
                 import gc
                 gc.collect()
+                if status_text:
+                    status_text.text(f"🧹 Memory cleanup after {i+1} images...")
                 print(f"memory cleanup after {i+1} images")
                 
         except Exception as e:
@@ -1637,6 +1685,10 @@ def run_multi_image_analysis(uploaded_files, sample_labels, params, use_fast_mod
     # combine all data
     combined_df = pd.concat(combined_data, ignore_index=True)
     
+    # Final status update
+    if status_text:
+        status_text.text(f"📊 Running comparative analysis on {len(all_results)} samples...")
+    
     # run comparative analysis
     comparison_results = {
         'individual_results': all_results,
@@ -1649,12 +1701,15 @@ def run_multi_image_analysis(uploaded_files, sample_labels, params, use_fast_mod
     comparison_results['pca_results'] = None
     
     # add similarity analysis
+    if status_text:
+        status_text.text(f"🔍 Computing similarity analysis...")
     try:
         comparison_results['similarity_results'] = run_similarity_analysis(combined_df)
     except Exception as e:
         print(f"similarity analysis failed: {e}")
         comparison_results['similarity_results'] = None
     
+    print(f"multi-image analysis complete: {len(all_results)} samples, {len(combined_df)} total colonies")
     return comparison_results
 
 def run_pca_analysis(combined_df, feature_set='morphology'):
