@@ -372,7 +372,7 @@ def main():
     # sidebar for parameters
     with st.sidebar:
         # clear data button
-        if st.button("🗑️ Clear All Data", help="Clear session data and fix media errors"):
+        if st.button("Clear All Data", help="Clear session data and fix media errors"):
             for key in list(st.session_state.keys()):
                 if key not in ['user_logged_in', 'group_id', 'session_id']:
                     del st.session_state[key]
@@ -850,10 +850,10 @@ def main():
                     # run analysis with detailed progress
                     progress_container = st.container()
                     with progress_container:
-                        st.info("🔬 **Analysis Pipeline Started**")
+                        st.info("Analysis Pipeline Started")
                         status_text = st.empty()
                         
-                    with st.spinner(" Running comprehensive bacterial colony analysis..."):
+                    with st.spinner("Running comprehensive bacterial colony analysis..."):
                         import sys
                         from io import StringIO
                         
@@ -875,7 +875,7 @@ def main():
                         
                         # Display final progress summary
                         if progress_messages:
-                            with st.expander("🔍 **View Detailed Analysis Steps**", expanded=False):
+                            with st.expander("View Detailed Analysis Steps", expanded=False):
                                 st.text(progress_messages)
                         
                         # add binary mask to results
@@ -888,9 +888,9 @@ def main():
                         # Add to run history
                         if results is not None:
                             add_run_to_history(params, results, uploaded_file.name)
-                            status_text.success("✅ **Analysis Complete!** Results are ready below.")
+                            status_text.success("Analysis Complete! Results are ready below.")
                         else:
-                            status_text.error("❌ **Analysis Failed** - Please check your image and try again.")
+                            status_text.error("Analysis Failed - Please check your image and try again.")
                 else:
                     # Use cached results
                     results = st.session_state.analysis_results
