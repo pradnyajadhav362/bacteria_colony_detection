@@ -1797,7 +1797,7 @@ def run_pca_analysis(combined_df, feature_set='morphology'):
     # define different feature sets
     feature_sets = {
         'morphology': ['area', 'perimeter', 'circularity', 'aspect_ratio', 'solidity'],
-        'bio_scoring': ['bio_interest'],
+        'bio_scoring': ['bio_interest', 'morphology_score', 'density_score', 'form_score'],
         'bio_with_morphology': ['area', 'perimeter', 'circularity', 'aspect_ratio', 'solidity', 'bio_interest'],
         'size_shape': ['area', 'perimeter', 'circularity'],
         'advanced_shape': ['aspect_ratio', 'solidity', 'circularity'],
@@ -2508,7 +2508,7 @@ def display_single_image_pca(results):
         st.markdown("""
         **Feature Sets:**
         - **morphology**: area, perimeter, circularity, aspect_ratio, solidity
-        - **bio_scoring**: bio_interest (comprehensive scoring)
+        - **bio_scoring**: bio_interest, morphology_score, density_score, form_score
         - **bio_with_morphology**: bio_interest + morphology features
         - **size_shape**: area, perimeter, circularity
         - **advanced_shape**: aspect_ratio, solidity, circularity
@@ -2526,6 +2526,12 @@ def display_single_image_pca(results):
         if 'error' in pca_results:
             st.error(f"PCA Analysis Error: {pca_results['error']}")
             st.write(f"Available features: {', '.join(pca_results['available_features'])}")
+            
+            # suggest alternative feature sets
+            st.write("**Try these alternative feature sets:**")
+            if len(pca_results['available_features']) >= 3:
+                st.write("- **morphology**: Basic shape and size features")
+                st.write("- **all_available**: All numerical features in your data")
             return
         
         # display results
