@@ -54,12 +54,38 @@ def matplotlib_to_bytes(fig, format='PNG', dpi=150):
     buf.seek(0)
     return buf.getvalue()
 
+def clean_stale_media_references():
+    # clean up any stale media file references in session state
+    if 'run_history' in st.session_state:
+        for run in st.session_state.run_history:
+            if 'results' in run and run['results']:
+                results = run['results']
+                # Remove image data that might have stale references
+                for img_key in ['original_image', 'processed_image']:
+                    if img_key in results:
+                        try:
+                            # Test if image is still accessible
+                            if hasattr(results[img_key], 'shape'):
+                                continue  # numpy array, should be fine
+                            elif hasattr(results[img_key], 'size'):
+                                continue  # PIL image, should be fine
+                            else:
+                                # Unknown format, remove it
+                                del results[img_key]
+                        except Exception:
+                            # Error accessing image, remove it
+                            if img_key in results:
+                                del results[img_key]
+
 def initialize_run_history():
     # initialize run history in session state
     if 'run_history' not in st.session_state:
         st.session_state.run_history = []
     if 'current_run_id' not in st.session_state:
         st.session_state.current_run_id = 0
+    
+    # Clean stale media references
+    clean_stale_media_references()
     
     # Fix existing multi-image runs with incorrect colony counts
     for run in st.session_state.run_history:
@@ -189,25 +215,31 @@ def display_run_history():
                 
                 # Original image download
                 if results and 'original_image' in results:
-                    img_bytes = image_to_bytes(results['original_image'])
-                    st.download_button(
-                        label="Original Image",
-                        data=img_bytes,
-                        file_name=f"run_{run_id}_original.png",
-                        mime="image/png",
-                        key=f"orig_{run_id}"
-                    )
+                    try:
+                        img_bytes = image_to_bytes(results['original_image'])
+                        st.download_button(
+                            label="Original Image",
+                            data=img_bytes,
+                            file_name=f"run_{run_id}_original.png",
+                            mime="image/png",
+                            key=f"orig_{run_id}"
+                        )
+                    except Exception:
+                        st.caption("Original image unavailable")
                 
                 # Processed image download
                 if results and 'processed_image' in results:
-                    img_bytes = image_to_bytes(results['processed_image'])
-                    st.download_button(
-                        label="Processed Image",
-                        data=img_bytes,
-                        file_name=f"run_{run_id}_processed.png",
-                        mime="image/png",
-                        key=f"proc_{run_id}"
-                    )
+                    try:
+                        img_bytes = image_to_bytes(results['processed_image'])
+                        st.download_button(
+                            label="Processed Image",
+                            data=img_bytes,
+                            file_name=f"run_{run_id}_processed.png",
+                            mime="image/png",
+                            key=f"proc_{run_id}"
+                        )
+                    except Exception:
+                        st.caption("Processed image unavailable")
                 
                 # Parameters JSON download
                 params_json = json.dumps(run['parameters'], indent=2)
@@ -339,6 +371,15 @@ def main():
     
     # sidebar for parameters
     with st.sidebar:
+        # clear data button
+        if st.button("🗑️ Clear All Data", help="Clear session data and fix media errors"):
+            for key in list(st.session_state.keys()):
+                if key not in ['user_logged_in', 'group_id', 'session_id']:
+                    del st.session_state[key]
+            st.success("All data cleared!")
+            st.rerun()
+        
+        st.divider()
         if analysis_mode == "Single Image Analysis":
             st.header("Upload Image")
             
@@ -351,14 +392,17 @@ def main():
                 # Show image preview (only if file hasn't been processed yet)
                 try:
                     if 'run_analysis' not in st.session_state or not st.session_state.run_analysis:
+                        # Reset file pointer and read image safely
+                        uploaded_file.seek(0)
                         image = Image.open(uploaded_file)
                         st.image(image, caption="Preview", width=200)
                     else:
                         # Analysis already run, show file info instead
                         st.info(f"File processed: {uploaded_file.name}")
                 except Exception as e:
-                    # File buffer consumed, just show name
+                    # File buffer consumed or media storage error, just show name
                     st.info(f"File ready: {uploaded_file.name}")
+                    st.caption("(Preview unavailable - file ready for analysis)")
                 
                 # Upload logged to session
         
@@ -985,20 +1029,29 @@ def display_overview(results):
     
     with col1:
         st.markdown("**Original Image**")
-        st.image(results['original_image'])
+        try:
+            st.image(results['original_image'])
+        except Exception:
+            st.error("Original image display error")
         # download button
-        original_bytes = image_to_bytes(results['original_image'])
-        if st.download_button(
-            label="Download Original Image",
-            data=original_bytes,
-            file_name="original_image.png",
-            mime="image/png"
-        ):
-            admin_logger.log_download(st.session_state.session_id, "original_image", "original_image.png")
+        try:
+            original_bytes = image_to_bytes(results['original_image'])
+            if st.download_button(
+                label="Download Original Image",
+                data=original_bytes,
+                file_name="original_image.png",
+                mime="image/png"
+            ):
+                admin_logger.log_download(st.session_state.session_id, "original_image", "original_image.png")
+        except Exception:
+            st.caption("Download unavailable")
     
     with col2:
         st.markdown("**Processed Image**")
-        st.image(results['processed_image'])
+        try:
+            st.image(results['processed_image'])
+        except Exception:
+            st.error("Processed image display error")
         # download button  
         processed_bytes = image_to_bytes(results['processed_image'])
         if st.download_button(
