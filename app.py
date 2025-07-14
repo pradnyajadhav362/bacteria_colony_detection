@@ -2555,8 +2555,11 @@ def display_single_image_pca(results):
         pca_plot_df = pca_results['pca_df'].copy()
         pca_plot_df['colony_id'] = df['colony_id'].values
         
-        # color by bio_interest if available
-        color_by = 'bio_interest' if 'bio_interest' in df.columns else None
+        # add bio_interest column for coloring if available
+        color_by = None
+        if 'bio_interest' in df.columns:
+            pca_plot_df['bio_interest'] = df['bio_interest'].values
+            color_by = 'bio_interest'
         
         fig_pca = px.scatter(
             pca_plot_df, 
@@ -2566,7 +2569,7 @@ def display_single_image_pca(results):
             title="Colony Diversity in Principal Component Space",
             labels={'PC1': f"PC1 ({pca_results['explained_variance'][0]*100:.1f}%)",
                     'PC2': f"PC2 ({pca_results['explained_variance'][1]*100:.1f}%)"},
-            color_continuous_scale='viridis'
+            color_continuous_scale='viridis' if color_by else None
         )
         
         # add colony ID annotations for top colonies
@@ -2650,10 +2653,11 @@ def display_single_image_pca(results):
         
         with col1:
             # pca data csv
-            pca_export = pca_plot_df[['colony_id', 'PC1', 'PC2']].copy()
-            if 'bio_interest' in df.columns:
-                pca_export['bio_interest'] = df['bio_interest'].values
+            export_cols = ['colony_id', 'PC1', 'PC2']
+            if 'bio_interest' in pca_plot_df.columns:
+                export_cols.append('bio_interest')
             
+            pca_export = pca_plot_df[export_cols].copy()
             csv_data = pca_export.to_csv(index=False)
             st.download_button(
                 label="Download PCA Data CSV",
