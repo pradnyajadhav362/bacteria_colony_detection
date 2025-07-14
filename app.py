@@ -2563,9 +2563,9 @@ def display_single_image_pca(results):
         if 'bio_interest' in df.columns:
             pca_plot_df['bio_interest'] = df['bio_interest'].values
             color_by = 'bio_interest'
-            st.write("✅ bio_interest available for coloring")
+            st.write("bio_interest available for coloring")
         else:
-            st.write("⚠️ bio_interest not available - using default coloring")
+            st.write("bio_interest not available - using default coloring")
             st.write(f"Available columns in df: {list(df.columns)}")
             st.write(f"Available columns in pca_plot_df: {list(pca_plot_df.columns)}")
         
@@ -2649,11 +2649,11 @@ def display_single_image_pca(results):
         # interpretation
         st.write("**Interpretation:**")
         if total_spread > 4:
-            st.success("🔬 High colony diversity detected - this sample shows significant morphological variation")
+            st.success("High colony diversity detected - this sample shows significant morphological variation")
         elif total_spread > 2:
-            st.info("🔬 Moderate colony diversity - some interesting variations present")
+            st.info("Moderate colony diversity - some interesting variations present")
         else:
-            st.warning("🔬 Low colony diversity - colonies appear quite similar to each other")
+            st.warning("Low colony diversity - colonies appear quite similar to each other")
         
         # download options
         st.subheader("Export PCA Results")
