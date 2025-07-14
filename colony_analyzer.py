@@ -500,9 +500,9 @@ class ColonyAnalyzer:
         if isinstance(colony_data, list):
             color_df = pd.DataFrame([{
                 'colony_id': data['colony_id'],
-                'area': data['area'],
                 'color_cluster': data.get('color_cluster', 0),
                 'color_class': f"color_group_{data.get('color_cluster', 0)}"
+                # removed area to avoid duplication with morph_df
             } for data in colony_data])
         else:
             color_df = colony_data
@@ -510,9 +510,16 @@ class ColonyAnalyzer:
         # merge all dataframes
         combined_df = morph_df.copy()
         if not color_df.empty:
-            combined_df = combined_df.merge(color_df, on='colony_id', how='outer')
+            # only merge columns that don't already exist
+            merge_cols = [col for col in color_df.columns if col == 'colony_id' or col not in combined_df.columns]
+            if len(merge_cols) > 1:  # more than just colony_id
+                combined_df = combined_df.merge(color_df[merge_cols], on='colony_id', how='outer')
+        
         if not density_df.empty:
-            combined_df = combined_df.merge(density_df, on='colony_id', how='outer')
+            # only merge columns that don't already exist  
+            merge_cols = [col for col in density_df.columns if col == 'colony_id' or col not in combined_df.columns]
+            if len(merge_cols) > 1:  # more than just colony_id
+                combined_df = combined_df.merge(density_df[merge_cols], on='colony_id', how='outer')
         
         # merge scoring data if provided
         if scores_df is not None and not scores_df.empty:
@@ -612,6 +619,7 @@ class ColonyAnalyzer:
             freq_c = combined_df['color_cluster'].value_counts(normalize=True)
             pen_vals += combined_df['color_cluster'].map(lambda x: freq_c[x]**2)
         if 'form' in combined_df:
+            freq_f = combined_df['form'].value_counts(normalize=True)
             pen_vals += combined_df['form'].map(lambda x: freq_f[x]**2)
         if combo is not None:
             pen_vals += combo.map(lambda x: freq_combo[x]**2)
