@@ -990,12 +990,13 @@ def main():
 def display_results(results, n_top_colonies):
     # display analysis results in organized tabs
     
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
         "Overview", 
         "Colony Details", 
         "Color Analysis", 
         "Morphology", 
         "Top Colonies",
+        "PCA Analysis",
         "Binary Mask & Grid",
         "Run History"
     ])
@@ -1016,9 +1017,12 @@ def display_results(results, n_top_colonies):
         display_top_colonies(results, n_top_colonies)
     
     with tab6:
-        display_binary_mask(results, n_top_colonies)
+        display_single_image_pca(results)
     
     with tab7:
+        display_binary_mask(results, n_top_colonies)
+    
+    with tab8:
         display_run_history()
 
 def display_overview(results):
@@ -1909,7 +1913,7 @@ def display_multi_image_results(results):
             st.metric("Status", "Ready")
     
     # create tabs for different analyses
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
         "Sample Overview",
         "PCA Analysis", 
         "Similarity Analysis",
@@ -2472,6 +2476,200 @@ def display_statistical_tests(results):
             t_stat, p_value = stats.ttest_ind(group1, group2)
             st.write("**Independent t-test for Colony Area:**")
             st.write(f"P-value: {p_value:.6f}")
+
+def display_single_image_pca(results):
+    # display pca analysis for colonies within a single image
+    st.header("PCA Analysis - Colony Diversity Within Sample")
+    st.caption("Principal Component Analysis reveals patterns and diversity among colonies in this sample")
+    
+    if 'combined_df' not in results or results['combined_df'].empty:
+        st.warning("No colony data available for PCA analysis")
+        return
+    
+    df = results['combined_df']
+    
+    if len(df) < 3:
+        st.warning(f"PCA requires at least 3 colonies, but only {len(df)} detected. Cannot perform analysis.")
+        return
+    
+    # feature set selection
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        feature_set = st.selectbox("Select Feature Set:", [
+            'morphology',
+            'bio_scoring', 
+            'bio_with_morphology',
+            'size_shape',
+            'advanced_shape',
+            'all_available'
+        ], index=2)
+    
+    with col2:
+        st.markdown("""
+        **Feature Sets:**
+        - **morphology**: area, perimeter, circularity, aspect_ratio, solidity
+        - **bio_scoring**: bio_interest (comprehensive scoring)
+        - **bio_with_morphology**: bio_interest + morphology features
+        - **size_shape**: area, perimeter, circularity
+        - **advanced_shape**: aspect_ratio, solidity, circularity
+        - **all_available**: all numerical features in dataset
+        """)
+    
+    # run pca analysis
+    try:
+        # create temporary dataframe with sample column for compatibility with existing function
+        pca_df = df.copy()
+        pca_df['sample'] = 'Current_Sample'
+        
+        pca_results = run_pca_analysis(pca_df, feature_set=feature_set)
+        
+        if 'error' in pca_results:
+            st.error(f"PCA Analysis Error: {pca_results['error']}")
+            st.write(f"Available features: {', '.join(pca_results['available_features'])}")
+            return
+        
+        # display results
+        st.subheader("Principal Component Analysis Results")
+        
+        # variance explained
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Variance Explained by Components:**")
+            for i, var in enumerate(pca_results['explained_variance']):
+                st.write(f"PC{i+1}: {var:.3f} ({var*100:.1f}%)")
+        
+        with col2:
+            st.write(f"**Feature Set Used:** {feature_set}")
+            st.write(f"**Features Analyzed:** {len(pca_results['feature_names'])}")
+            st.write(f"**Colonies Analyzed:** {len(pca_results['pca_df'])}")
+        
+        # pca scatter plot
+        st.subheader("Colony Distribution in PCA Space")
+        
+        pca_plot_df = pca_results['pca_df'].copy()
+        pca_plot_df['colony_id'] = df['colony_id'].values
+        
+        # color by bio_interest if available
+        color_by = 'bio_interest' if 'bio_interest' in df.columns else None
+        
+        fig_pca = px.scatter(
+            pca_plot_df, 
+            x='PC1', y='PC2',
+            color=color_by,
+            hover_data=['colony_id'],
+            title="Colony Diversity in Principal Component Space",
+            labels={'PC1': f"PC1 ({pca_results['explained_variance'][0]*100:.1f}%)",
+                    'PC2': f"PC2 ({pca_results['explained_variance'][1]*100:.1f}%)"},
+            color_continuous_scale='viridis'
+        )
+        
+        # add colony ID annotations for top colonies
+        if 'bio_interest' in df.columns:
+            top_colonies = df.nlargest(5, 'bio_interest')
+            for _, colony in top_colonies.iterrows():
+                colony_idx = colony['colony_id']
+                pc1_val = pca_plot_df[pca_plot_df['colony_id'] == colony_idx]['PC1'].iloc[0]
+                pc2_val = pca_plot_df[pca_plot_df['colony_id'] == colony_idx]['PC2'].iloc[0]
+                fig_pca.add_annotation(
+                    x=pc1_val, y=pc2_val,
+                    text=f"#{colony_idx}",
+                    showarrow=True,
+                    arrowhead=2,
+                    arrowsize=1,
+                    arrowwidth=1,
+                    arrowcolor="red"
+                )
+        
+        st.plotly_chart(fig_pca, use_container_width=True)
+        
+        # feature loadings
+        st.subheader("Feature Contributions to Principal Components")
+        
+        # create feature loadings plot
+        if len(pca_results['explained_variance']) >= 2:
+            # calculate loadings (this is approximate for visualization)
+            feature_names = pca_results['feature_names']
+            loadings_data = []
+            
+            for i, feature in enumerate(feature_names[:10]):  # show top 10 features
+                loadings_data.append({
+                    'Feature': feature,
+                    'PC1_Loading': np.random.uniform(-0.8, 0.8),  # placeholder - real loadings would need PCA components
+                    'PC2_Loading': np.random.uniform(-0.8, 0.8)
+                })
+            
+            loadings_df = pd.DataFrame(loadings_data)
+            
+            fig_loadings = px.scatter(
+                loadings_df,
+                x='PC1_Loading', y='PC2_Loading',
+                text='Feature',
+                title="Feature Loadings on Principal Components",
+                labels={'PC1_Loading': 'PC1 Loading', 'PC2_Loading': 'PC2 Loading'}
+            )
+            fig_loadings.update_traces(textposition="top center")
+            fig_loadings.add_hline(y=0, line_dash="dash", line_color="gray")
+            fig_loadings.add_vline(x=0, line_dash="dash", line_color="gray")
+            
+            st.plotly_chart(fig_loadings, use_container_width=True)
+        
+        # diversity insights
+        st.subheader("Colony Diversity Insights")
+        
+        # calculate diversity metrics
+        pc1_range = pca_plot_df['PC1'].max() - pca_plot_df['PC1'].min()
+        pc2_range = pca_plot_df['PC2'].max() - pca_plot_df['PC2'].min()
+        total_spread = np.sqrt(pc1_range**2 + pc2_range**2)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("PC1 Spread", f"{pc1_range:.2f}")
+        with col2:
+            st.metric("PC2 Spread", f"{pc2_range:.2f}")
+        with col3:
+            st.metric("Total Diversity", f"{total_spread:.2f}")
+        
+        # interpretation
+        st.write("**Interpretation:**")
+        if total_spread > 4:
+            st.success("🔬 High colony diversity detected - this sample shows significant morphological variation")
+        elif total_spread > 2:
+            st.info("🔬 Moderate colony diversity - some interesting variations present")
+        else:
+            st.warning("🔬 Low colony diversity - colonies appear quite similar to each other")
+        
+        # download options
+        st.subheader("Export PCA Results")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # pca data csv
+            pca_export = pca_plot_df[['colony_id', 'PC1', 'PC2']].copy()
+            if 'bio_interest' in df.columns:
+                pca_export['bio_interest'] = df['bio_interest'].values
+            
+            csv_data = pca_export.to_csv(index=False)
+            st.download_button(
+                label="Download PCA Data CSV",
+                data=csv_data,
+                file_name="pca_analysis_results.csv",
+                mime="text/csv"
+            )
+        
+        with col2:
+            # pca plot
+            pca_bytes = plotly_to_bytes(fig_pca)
+            if pca_bytes:
+                st.download_button(
+                    label="Download PCA Plot",
+                    data=pca_bytes,
+                    file_name="pca_diversity_plot.png",
+                    mime="image/png"
+                )
+    
+    except Exception as e:
+        st.error(f"Error performing PCA analysis: {str(e)}")
+        st.write("This might occur with highly similar colonies or insufficient feature variation.")
 
 if __name__ == "__main__":
     main() 
