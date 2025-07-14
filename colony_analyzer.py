@@ -228,10 +228,13 @@ class ColonyAnalyzer:
     
     def analyze_morphology(self, colony_labels, colony_properties):
         # measure each colony's shape and classify edge style
-        print("analyzing colony morphology")
+        print(f"analyzing morphology for {len(colony_properties)} colonies...")
         
         data = []
         for idx, prop in enumerate(colony_properties):
+            if idx % 10 == 0 and idx > 0:
+                print(f"processed {idx}/{len(colony_properties)} colonies")
+            
             area = prop.area
             perimeter = prop.perimeter
             major_axis = prop.major_axis_length
@@ -323,7 +326,7 @@ class ColonyAnalyzer:
     
     def analyze_colors(self, processed_image, colony_labels, colony_properties):
         # pick dominant color of each colony and group similar ones
-        print("analyzing colony colors with kmeans clustering")
+        print(f"analyzing colors and clustering for {len(colony_properties)} colonies...")
         
         if len(colony_properties) == 0:
             return [], []
@@ -331,8 +334,12 @@ class ColonyAnalyzer:
         colony_data = []
         rgb_colors = []
         
+        print("extracting dominant colors from each colony...")
         # extract dominant colors
         for i, prop in enumerate(colony_properties):
+            if i % 20 == 0 and i > 0:
+                print(f"extracted colors for {i}/{len(colony_properties)} colonies")
+            
             mask = (colony_labels == prop.label)
             colony_pixels = processed_image[mask]
             
@@ -365,6 +372,7 @@ class ColonyAnalyzer:
             scaler = StandardScaler()
             lab_scaled = scaler.fit_transform(lab_colors)
             
+            print("determining optimal number of color clusters...")
             best_k = 3
             if len(lab_colors) > 4:
                 inertias = []
@@ -380,6 +388,7 @@ class ColonyAnalyzer:
                     diffs = np.diff(inertias)
                     best_k = k_range[np.argmax(diffs)] if len(diffs) > 0 else 3
             
+            print(f"performing kmeans clustering with {best_k} clusters...")
             # final clustering
             kmeans = KMeans(n_clusters=best_k, random_state=self.color_random_state, n_init=self.color_n_init)
             clusters = kmeans.fit_predict(lab_scaled)
@@ -397,8 +406,8 @@ class ColonyAnalyzer:
         return colony_data, clusters
     
     def analyze_density(self, processed_image, colony_labels, colony_properties, plate_mask):
-        # quantify how dense or see-through each colony appears
-        print("analyzing colony density")
+        # look at pixel density patterns and opacity
+        print(f"analyzing density patterns for {len(colony_properties)} colonies...")
         
         gray_image = cv2.cvtColor(processed_image, cv2.COLOR_RGB2GRAY)
         hsv_image = cv2.cvtColor(processed_image, cv2.COLOR_RGB2HSV)
@@ -412,6 +421,9 @@ class ColonyAnalyzer:
         colony_density_data = []
         
         for i, prop in enumerate(colony_properties):
+            if i % 15 == 0 and i > 0:
+                print(f"analyzed density for {i}/{len(colony_properties)} colonies")
+            
             minr, minc, maxr, maxc = prop.bbox
             colony_region_gray = gray_image[minr:maxr, minc:maxc]
             colony_region_hsv = hsv_image[minr:maxr, minc:maxc]
@@ -482,7 +494,7 @@ class ColonyAnalyzer:
     
     def combine_analyses(self, morph_df, colony_data, density_df):
         # combine morphology, color, density data and calculate comprehensive scores
-        print("combining all colony analysis data")
+        print("combining morphology, color, and density analysis results...")
         
         # convert color data to dataframe if needed
         if isinstance(colony_data, list):
@@ -506,11 +518,12 @@ class ColonyAnalyzer:
         combined_df = combined_df.fillna(0)
         
         self.combined_df = combined_df
-        print(f"combined data for {len(combined_df)} colonies")
+        print(f"successfully combined analysis data for {len(combined_df)} colonies")
         return combined_df
     
     def calculate_scores(self, combined_df):
         # compute base scores penalizing common features and rewarding rare combos
+        print("calculating comprehensive scoring metrics for each colony...")
         scores = pd.DataFrame({'colony_id': combined_df['colony_id']})
         
         # morphological complexity
@@ -661,31 +674,51 @@ class ColonyAnalyzer:
         print("starting full colony analysis pipeline")
         
         # load and preprocess
+        print("loading image and preprocessing...")
         original = self.load_image(image_path)
         if original is None:
+            print("failed to load image")
             return None
+        print(f"image loaded successfully - dimensions: {original.shape[1]}x{original.shape[0]}")
         
         processed = self.preprocess_image(original)
+        print("image preprocessing completed")
         
         # detect plate and segment colonies
+        print("detecting petri dish plate boundaries...")
         plate_mask, plate_info = self.detect_plate(processed)
+        print("plate detection completed")
+        
+        print("segmenting bacterial colonies...")
         colony_labels, colony_props = self.segment_colonies(processed, plate_mask)
         
         if len(colony_props) == 0:
-            print("no colonies detected")
+            print("no colonies detected - analysis cannot proceed")
             return None
         
+        print(f"found {len(colony_props)} potential colonies for analysis")
+        
         # analyze colonies
+        print("analyzing colony morphology (shape, size, texture)...")
         morph_df = self.analyze_morphology(colony_labels, colony_props)
+        
+        print("analyzing colony colors and clustering...")
         colony_data, clusters = self.analyze_colors(processed, colony_labels, colony_props)
+        
+        print("analyzing colony density patterns...")
         density_df = self.analyze_density(processed, colony_labels, colony_props, plate_mask)
         
         # combine and score
+        print("combining all analysis results...")
         combined_df = self.combine_analyses(morph_df, colony_data, density_df)
+        
+        print("calculating colony scores and rankings...")
         scores_df = self.calculate_scores(combined_df)
+        
+        print(f"selecting top {self.n_top_colonies} colonies...")
         top_colonies = self.select_top_colonies(scores_df, n=self.n_top_colonies)
         
-        print("analysis complete")
+        print("analysis pipeline completed successfully")
         return {
             'original_image': original,
             'processed_image': processed,

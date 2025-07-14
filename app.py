@@ -847,12 +847,37 @@ def main():
                 
                 # Check if we need to re-run analysis or use cached results
                 if 'analysis_results' not in st.session_state:
-                    # run analysis
-                    with st.spinner(" Analyzing bacterial colonies..."):
-
+                    # run analysis with detailed progress
+                    progress_container = st.container()
+                    with progress_container:
+                        st.info("🔬 **Analysis Pipeline Started**")
+                        status_text = st.empty()
                         
-                        analyzer = ColonyAnalyzer(**params)
-                        results = analyzer.run_full_analysis("temp_image.jpg")
+                    with st.spinner(" Running comprehensive bacterial colony analysis..."):
+                        import sys
+                        from io import StringIO
+                        
+                        # Capture print statements for progress display
+                        old_stdout = sys.stdout
+                        captured_output = StringIO()
+                        sys.stdout = captured_output
+                        
+                        try:
+                            analyzer = ColonyAnalyzer(**params)
+                            results = analyzer.run_full_analysis("temp_image.jpg")
+                            
+                            # Get captured progress messages
+                            progress_messages = captured_output.getvalue()
+                            
+                        finally:
+                            # Restore stdout
+                            sys.stdout = old_stdout
+                        
+                        # Display final progress summary
+                        if progress_messages:
+                            with st.expander("🔍 **View Detailed Analysis Steps**", expanded=False):
+                                st.text(progress_messages)
+                        
                         # add binary mask to results
                         if hasattr(analyzer, 'final_binary_mask'):
                             results['final_binary_mask'] = analyzer.final_binary_mask
@@ -863,8 +888,9 @@ def main():
                         # Add to run history
                         if results is not None:
                             add_run_to_history(params, results, uploaded_file.name)
-                            
-                            # Analysis completed successfully
+                            status_text.success("✅ **Analysis Complete!** Results are ready below.")
+                        else:
+                            status_text.error("❌ **Analysis Failed** - Please check your image and try again.")
                 else:
                     # Use cached results
                     results = st.session_state.analysis_results
