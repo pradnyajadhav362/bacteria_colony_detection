@@ -492,7 +492,7 @@ class ColonyAnalyzer:
         print("done with density analysis")
         return self.density_df
     
-    def combine_analyses(self, morph_df, colony_data, density_df):
+    def combine_analyses(self, morph_df, colony_data, density_df, scores_df=None):
         # combine morphology, color, density data and calculate comprehensive scores
         print("combining morphology, color, and density analysis results...")
         
@@ -513,6 +513,14 @@ class ColonyAnalyzer:
             combined_df = combined_df.merge(color_df, on='colony_id', how='outer')
         if not density_df.empty:
             combined_df = combined_df.merge(density_df, on='colony_id', how='outer')
+        
+        # merge scoring data if provided
+        if scores_df is not None and not scores_df.empty:
+            # select key scoring columns to include
+            score_cols = ['colony_id', 'bio_interest', 'morphology_score', 'density_score', 'form_score']
+            available_score_cols = [col for col in score_cols if col in scores_df.columns]
+            if available_score_cols:
+                combined_df = combined_df.merge(scores_df[available_score_cols], on='colony_id', how='outer')
         
         # fill missing values
         combined_df = combined_df.fillna(0)
@@ -709,11 +717,14 @@ class ColonyAnalyzer:
         density_df = self.analyze_density(processed, colony_labels, colony_props, plate_mask)
         
         # combine and score
-        print("combining all analysis results...")
+        print("combining initial analysis results...")
         combined_df = self.combine_analyses(morph_df, colony_data, density_df)
         
         print("calculating colony scores and rankings...")
         scores_df = self.calculate_scores(combined_df)
+        
+        print("merging scores back into combined dataset...")
+        combined_df = self.combine_analyses(morph_df, colony_data, density_df, scores_df)
         
         print(f"selecting top {self.n_top_colonies} colonies...")
         top_colonies = self.select_top_colonies(scores_df, n=self.n_top_colonies)
