@@ -348,9 +348,17 @@ def main():
             
             if uploaded_file is not None:
                 st.success(f"✓ {uploaded_file.name}")
-                # Show image preview
-                image = Image.open(uploaded_file)
-                st.image(image, caption="Preview", width=200)
+                # Show image preview (only if file hasn't been processed yet)
+                try:
+                    if 'run_analysis' not in st.session_state or not st.session_state.run_analysis:
+                        image = Image.open(uploaded_file)
+                        st.image(image, caption="Preview", width=200)
+                    else:
+                        # Analysis already run, show file info instead
+                        st.info(f"File processed: {uploaded_file.name}")
+                except Exception as e:
+                    # File buffer consumed, just show name
+                    st.info(f"File ready: {uploaded_file.name}")
                 
                 # Upload logged to session
         
@@ -1587,23 +1595,13 @@ def run_multi_image_analysis(uploaded_files, sample_labels, params, use_fast_mod
     start_time = time.time()
     
     for i, uploaded_file in enumerate(uploaded_files):
-        # Update progress and status with time estimate
-        progress = int((i / total_files) * 100)
-        if progress_bar:
-            progress_bar.progress(progress)
-        
-        # Calculate estimated time remaining
-        if i > 0:
-            elapsed_time = time.time() - start_time
-            avg_time_per_image = elapsed_time / i
-            remaining_images = total_files - i
-            estimated_remaining = int(avg_time_per_image * remaining_images)
-            time_text = f" (⏱️ ~{estimated_remaining}s remaining)" if estimated_remaining > 0 else ""
-        else:
-            time_text = ""
-        
-        if status_text:
-            status_text.text(f"📸 Processing {i+1}/{total_files}: {uploaded_file.name}{time_text}")
+        # Simplified progress updates (less frequent to avoid slowdown)
+        if i % 3 == 0 or i == total_files - 1:  # Update every 3 images or on last image
+            progress = int((i / total_files) * 100)
+            if progress_bar:
+                progress_bar.progress(progress)
+            if status_text:
+                status_text.text(f"📸 Processing {i+1}/{total_files}: {uploaded_file.name}")
         
         print(f"processing {i+1}/{total_files}: {uploaded_file.name}")
         
@@ -1612,10 +1610,6 @@ def run_multi_image_analysis(uploaded_files, sample_labels, params, use_fast_mod
             temp_filename = f"temp_image_{i}.jpg"
             with open(temp_filename, "wb") as f:
                 f.write(uploaded_file.getbuffer())
-            
-            # Update status for analysis start
-            if status_text:
-                status_text.text(f"🔬 Analyzing colonies in {uploaded_file.name} ({i+1}/{total_files})...")
             
             # Apply speed optimizations if fast mode enabled
             analysis_params = params.copy()
