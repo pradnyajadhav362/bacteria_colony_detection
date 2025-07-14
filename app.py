@@ -2488,6 +2488,9 @@ def display_single_image_pca(results):
     
     df = results['combined_df']
     
+    # debug: show available columns
+    st.write(f"**Debug**: Available columns: {list(df.columns)}")
+    
     if len(df) < 3:
         st.warning(f"PCA requires at least 3 colonies, but only {len(df)} detected. Cannot perform analysis.")
         return
@@ -2560,6 +2563,11 @@ def display_single_image_pca(results):
         if 'bio_interest' in df.columns:
             pca_plot_df['bio_interest'] = df['bio_interest'].values
             color_by = 'bio_interest'
+            st.write("✅ bio_interest available for coloring")
+        else:
+            st.write("⚠️ bio_interest not available - using default coloring")
+            st.write(f"Available columns in df: {list(df.columns)}")
+            st.write(f"Available columns in pca_plot_df: {list(pca_plot_df.columns)}")
         
         fig_pca = px.scatter(
             pca_plot_df, 
