@@ -20,7 +20,7 @@ A web-based image analysis tool for detecting and characterizing bacterial colon
    - Single Image Analysis
    - Multi-Image Comparison
 5. **Run Analysis**: Process your image and view results
-6. **Download Results**: Export colony data and processed images
+6. **Download Results**: Export colony data in csv format and processed images 
 
 ## Analysis Capabilities
 
